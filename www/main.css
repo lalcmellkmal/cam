@@ -1,0 +1,54 @@
+body {
+	background-color: #f5f5f5;
+	color: #222;
+	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro";
+	font-size: 10pt;
+}
+li {
+	background-color: white;
+	border: 1px solid #aaa;
+	border-radius: 5px;
+	display: block;
+	float: left;
+	font-weight: bold;
+	margin: 0.5em;
+	padding: 0.5em;
+	width: 9em;
+	height: 13em;
+}
+li.black {
+	background-color: black;
+	color: #f0f0f0;
+}
+li.normal {
+	color: #aaa;
+}
+li.selected {
+	background-color: #55f;
+	color: white;
+	margin-top: -1em;
+	margin-bottom: 2em;
+}
+li.selecting {
+	border-color: white;
+	color: black;
+	margin-top: -0.5em;
+	margin-bottom: 1.5em;
+}
+.unlocked li.normal {
+	color: #555;
+	cursor: pointer;
+}
+.unlocked li.normal:hover {
+	border-color: white;
+}
+ul {
+	clear: both;
+	list-style: none;
+}
+.error {
+	color: red;
+}
+#roster {
+	float: right;
+}
