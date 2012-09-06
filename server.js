@@ -167,6 +167,7 @@ G.startRound = function () {
             }
             self.state = 'picking';
             self.black = black;
+            self.blackInfo = common.parseBlack(black);
             self.sendAll('set', {unlocked: true});
             self.sendAll('black', {black: black});
         });
@@ -193,7 +194,7 @@ G.sendAll = function (type, msg) {
 
 G.sendState = function (dest) {
     var self = this;
-    var info = {roster: this.makeRoster(), unlocked: false};
+    var info = {unlocked: false};
 
     switch (this.state) {
         case 'waiting':
@@ -228,9 +229,10 @@ G.onSelection = function () {
     this.state = 'ranking';
 
     var submissions = [], submissionIds = {};
+    var blankCount = this.blackInfo.blankCount;
     var self = this;
     function checkSubmission(player, cb) {
-        player.checkSubmission(function (err, submission) {
+        player.checkSubmission(blankCount, function (err, submission) {
             if (err)
                 return cb(err);
             if (submission) {
@@ -242,29 +244,27 @@ G.onSelection = function () {
         });
     }
 
+    function revert(err) {
+        self.state = 'picking';
+        self.fail(err);
+    }
+
     async.forEach(this.players, checkSubmission, function (err) {
-        if (err) {
-            self.state = 'picking';
-            return self.fail(err);
-        }
-        else if (!submissions.length) {
-            self.state = 'picking';
-            return self.fail("No submissions!");
-        }
+        if (err)
+            return revert(err);
+        else if (!submissions.length)
+            return revert('No submissions!'); // need to fail gracefully
         shuffle(submissions);
 
         var m = self.r.multi();
-        var info = {state: 'ranking', submissions: JSON.stringify(submissions)};
-        m.hmset(self.key, info);
+        m.hmset(self.key, {state: 'ranking', submissions: JSON.stringify(submissions)});
         submissions.forEach(function (sub) {
             sub.player.handOverSubmission(m, sub);
             delete sub.player;
         });
         m.exec(function (err) {
-            if (err) {
-                self.state = 'picking';
-                return self.fail(err);
-            }
+            if (err)
+                return revert(err);
 
             self.submissions = submissions;
             self.sendAll('set', {submissions: self.anonymizedSubmissions()});
@@ -359,6 +359,7 @@ C.handle_login = function (msg) {
                 return self.drop("Couldn't find your game.");
             self.state = 'playing';
             self.sendHand();
+            self.send('set', {roster: game.makeRoster()});
             game.sendState(self);
         }
         else {
@@ -424,40 +425,54 @@ C.dealInitialHand = function () {
 C.handle_select = function (msg) {
     if (!this.state == 'playing')
         return this.warn("Not playing!");
-    if (!msg.card || !(typeof msg.card == 'string'))
-        return this.warn("No card selected!");
+    var cards = msg.cards;
+    if (!_.isArray(cards) || !cards.length)
+        return this.warn("No cards selected!");
+    if (!cards.every(function (card) { return typeof card == 'string'; }))
+        return this.warn("Invalid choices!");
+    if (_.uniq(cards).length != cards.length)
+        return this.warn("Duplicate choices!");
 
     // TEMP
     var self = this;
     setTimeout(function () {
 
-    self.selection = msg.card;
-    self.send('select', {card: msg.card});
+    self.selection = msg.cards;
+    self.send('select', {cards: msg.cards});
     self.emit('select');
 
     // TEMP
     }, 500);
 };
 
-C.checkSubmission = function (cb) {
+C.checkSubmission = function (count, cb) {
+    if (this.selection.length != count) {
+        this.warn("Wrong number of selections!");
+        return cb(null, false);
+    }
     var self = this;
-    this.r.sismember(this.key + ':hand', this.selection, function (err, ok) {
+    var m = this.r.multi();
+    var key = this.key + ':hand';
+    this.selection.forEach(function (card) {
+        m.sismember(key, card);
+    });
+    m.exec(function (err, rs) {
         if (err)
             return cb(err);
-        if (!ok)
+        if (!rs.every(function (n) { return n; }))
             return cb(null, false);
-        cb(null, {id: self.name, card: self.selection});
+        cb(null, {id: self.name, cards: self.selection});
     });
 };
 
 C.handOverSubmission = function (m, submission) {
-    m.srem(this.key + ':hand', submission.card);
+    m.srem(this.key + ':hand', submission.cards);
 };
 
 C.confirmSubmission = function (mapping) {
     var sub = mapping[this.name];
     if (sub)
-        this.send('select', {card: sub.card, final: true});
+        this.send('select', {cards: sub.cards, final: true});
     else
         this.send('set', {status: 'Invalid submission!'});
     this.send('set', {unlocked: false});
@@ -470,6 +485,8 @@ function cardsFromNames(hand) {
 
 C.warn = function (msg) {
     console.warn(this.name + ': ' + msg);
+    if (typeof msg == 'string')
+        this.send('set', {status: msg});
 };
 
 C.drop = function (reason) {

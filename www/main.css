@@ -5,6 +5,7 @@ body {
 	font-size: 10pt;
 }
 li {
+	position: relative;
 	background-color: white;
 	border: 1px solid #aaa;
 	border-radius: 5px;
@@ -42,13 +43,36 @@ li.selecting {
 .unlocked li.normal:hover {
 	border-color: white;
 }
-ul {
-	clear: both;
-	list-style: none;
+li span {
+	bottom: -0.2em;
+	color: #eee;
+	font-size: 50pt;
+	position: absolute;
+	right: 0;
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+	-ms-user-select: none;
+	z-index: 1;
 }
-.error {
-	color: red;
+li a {
+	position: relative;
+	z-index: 2;
+}
+ul {
+	list-style: none;
 }
 #roster {
 	float: right;
+}
+#status {
+	clear: both;
+	font-weight: bold;
+	text-align: center;
+	padding: 0.5em 0.5em 0 0.5em;
+	margin: 0;
+}
+#status.error {
+	color: red;
 }

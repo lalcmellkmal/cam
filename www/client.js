@@ -8,6 +8,14 @@ var Card = Backbone.Model.extend({
 
 var Cards = Backbone.Collection.extend({
 	model: Card,
+
+	resetSelections: function (opts) {
+		opts = opts || {};
+		this.each(function (card) {
+			if (card !== opts.except)
+				card.set({index: 0, state: 'normal'});
+		});
+	},
 });
 
 var CardView = Backbone.View.extend({
@@ -20,20 +28,30 @@ var CardView = Backbone.View.extend({
 	select: function (event) {
 		if (!game.get('unlocked'))
 			return;
-		send('select', {card: this.model.id});
-		this.model.set({state: 'selecting'});
+		if (this.model.get('state') == 'selecting')
+			hand.resetSelections();
+		else
+			this.model.set({state: 'selecting'});
 	},
 
 	initialize: function () {
-		this.$el.append($('<a/>'));
+		this.$el.append('<span/><a/>');
 		this.model.on('change', this.render, this);
-		this.model.on('destroy', this.remove, this);
+		this.model.on('remove', this.fadeAway, this);
 	},
 
 	render: function () {
+		var attrs = this.model.attributes;
 		this.$('a').text(this.model.id);
-		this.$el.prop('class', this.model.get('state'));
+		this.$('span').text(attrs.index || '').toggle(!!attrs.index);
+		this.$el.prop('class', attrs.state);
 		return this;
+	},
+
+	fadeAway: function () {
+		this.$el.animate({opacity: 0, width: 0}, function () {
+			$(this).remove();
+		});
 	},
 });
 
@@ -42,34 +60,52 @@ var HandView = Backbone.View.extend({
 
 	initialize: function () {
 		this.model.on('reset', this.reset, this);
-		this.model.on('remove', this.removeCard, this);
-
 	},
 
 	reset: function (model) {
 		this.$el.empty();
-		hand.each(this.addCard, this);
+		this.model.each(this.addCard, this);
 	},
 
 	addCard: function (card) {
 		var view = new CardView({model: card});
 		this.$el.append(view.render().el);
 	},
-
-	removeCard: function (card, hand, opts) {
-		this.$('li').eq(opts.index).animate({
-			opacity: 0,
-			width: 0,
-		}, function () {
-			$(this).remove();
-		});
-	},
-
 });
 
 var Game = Backbone.Model.extend({
 	defaults: {
 		status: 'Loading...',
+	},
+
+	initialize: function () {
+		hand.on('change:state', this.selectionChanged, this);
+	},
+
+	selectionChanged: function (card, newState) {
+		if (newState != 'selecting')
+			return;
+		var black = this.get('black');
+		var n = black.blankCount;
+		if (n < 2)
+			return send('select', {cards: [card.id]});
+		// Figure out the next index
+		var indices = _.filter(hand.pluck('index'), function (x) { return x; });
+		indices.push(0);
+		var index = _.max(indices) + 1;
+
+		if (index > n) {
+			index = 1;
+			hand.resetSelections({except: card});
+		}
+		card.set({index: index});
+		if (index == n) {
+			var choices = hand.where({state: 'selecting'});
+			choices.sort(function (a, b) {
+				return a.get('index') - b.get('index');
+			});
+			send('select', {cards: _.pluck(choices, 'id')});
+		}
 	},
 });
 
@@ -78,7 +114,8 @@ var GameView = Backbone.View.extend({
 		var handView = new HandView({model: hand, id: 'myHand'});
 		var submissions = new HandView({model: this.model, id: 'submissions'});
 		var black = $('<li class="black"><a/></li>').hide();
-		this.$el.append(black, ' <p id="roster"></p> ', submissions.$el.hide(), handView.$el);
+		this.$el.prepend(black, ' <p id="roster"></p> '
+			).append(submissions.$el, handView.$el);
 
 		this.model.on('change:status change:error', this.renderStatus, this);
 		this.model.on('change:roster', this.renderRoster, this);
@@ -137,7 +174,9 @@ $(function () {
 
 function send(type, msg) {
 	msg.a = type;
-	sock.send(JSON.stringify(msg));
+	msg = JSON.stringify(msg);
+	console.log('> ' + msg);
+	sock.send(msg);
 }
 
 window.sock = new SockJS('http://localhost:8000/sockjs');
@@ -147,11 +186,8 @@ sock.onopen = function () {
 
 sock.onmessage = function (msg) {
 	_.each(JSON.parse(msg.data), function (data) {
-		var func = dispatch[data.a];
-		if (func)
-			func(data);
-		else if (window.console)
-			console.warn("No such dispatch " + data.a);
+		console.log('< ' + JSON.stringify(data));
+		dispatch[data.a].call(data);
 	});
 };
 
@@ -162,50 +198,49 @@ sock.onclose = function () {
 	game.set({status: err, error: true});
 };
 
-var dispatch = {};
-
-dispatch.set = function (msg) {
-	var target = 'game';
-	if (msg.t) {
-		target = msg.t;
-		delete msg.t;
-	}
-	window[target].set(msg);
-};
-
-dispatch.error = function (msg) {
-	game.set({status: msg.reason, error: true});
-};
-
-dispatch.status = function (msg) {
-	game.set({status: msg.status, error: false});
-};
-
-dispatch.black = function (msg) {
-	var black = parseBlack(msg.black);
-	var write = {black: black};
-	if (game.get('unlocked'))
-		write.status = 'Pick ' + black.blankCount + '.';
-	game.set(write);
-};
-
-dispatch.hand = function (msg) {
-	hand.reset(msg.hand);
-};
-
-dispatch.select = function (msg) {
-	var target = hand.get(msg.card);
-	hand.each(function (card) {
-		var dest = 'normal';
-		if (card === target) {
-			if (msg.final)
-				return hand.remove(target);
-			dest = 'selected';
+var dispatch = {
+	set: function () {
+		var target = 'game';
+		if (this.t) {
+			target = this.t;
+			delete this.t;
 		}
-		else if (!msg.final && card.get('state') == 'selecting')
-			return;
-		card.set({state: dest});
-	});
+		window[target].set(this);
+	},
+
+	black: function () {
+		var black = parseBlack(this.black);
+		var write = {black: black};
+		if (game.get('unlocked')) {
+			var n = black.blankCount;
+			var word = {1: 'one', 2: 'two', 3: 'three'}[n];
+			write.status = 'Pick ' + (word || n) + '.';
+		}
+		game.set(write);
+	},
+
+	hand: function () {
+		hand.reset(this.hand);
+	},
+
+	select: function () {
+		var targets = _.map(this.cards, function (card) {
+			return hand.get(card);
+		});
+		var final = this.final;
+		hand.each(function (card) {
+			var dest = 'normal';
+			if (targets.indexOf(card) >= 0) {
+				if (final)
+					return;
+				dest = 'selected';
+			}
+			else if (!final && card.get('state') == 'selecting')
+				return;
+			card.set({state: dest});
+		});
+		hand.remove(targets);
+	},
 };
 
 /*
