@@ -130,8 +130,7 @@ var GameView = Backbone.View.extend({
 	},
 
 	renderRoster: function () {
-		var roster = this.model.get('roster');
-		roster = roster.map(function (player) { return player.name; });
+		var roster = _.pluck(this.model.get('roster'), 'name');
 		this.$('#roster').text('Players: ' + roster.join(', '));
 	},
 
