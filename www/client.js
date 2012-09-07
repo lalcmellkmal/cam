@@ -110,23 +110,40 @@ var Game = Backbone.Model.extend({
 });
 
 var GameView = Backbone.View.extend({
+	events: {
+		'click #join': 'joinGame',
+	},
+
 	initialize: function () {
 		var handView = new HandView({model: hand, id: 'myHand'});
 		var submissions = new HandView({model: this.model, id: 'submissions'});
+		var accountView = new AccountView({model: account});
+
 		var black = $('<li class="black"><a/></li>').hide();
-		this.$el.prepend(black, ' <p id="roster"></p> '
-			).append(submissions.$el, handView.$el);
+		var joinButton = $('<input type=button id=join value=Join>').hide();
+		this.$el.prepend(black, accountView.render().el, ' <p id="roster"></p> '
+			).append(joinButton, submissions.el, handView.el);
 
 		this.model.on('change:status change:error', this.renderStatus, this);
+		this.model.on('change:canJoin', this.renderCanJoin, this);
 		this.model.on('change:roster', this.renderRoster, this);
 		this.model.on('change:black', this.renderBlack, this);
 		this.model.on('change:unlocked', this.renderHandLock, this);
 		this.model.on('change:submissions', this.renderSubmissions, this);
 	},
 
+	joinGame: function () {
+		send('join', {});
+		this.model.set({canJoin: false});
+	},
+
 	renderStatus: function () {
 		var attrs = this.model.attributes;
 		this.$('#status').text(attrs.status).prop('class', attrs.error ? 'error' : '');
+	},
+
+	renderCanJoin: function () {
+		this.$('#join').toggle(!!this.model.get('canJoin'));
 	},
 
 	renderRoster: function () {
@@ -158,12 +175,40 @@ var GameView = Backbone.View.extend({
 		// should animate
 		$subs.empty();
 	},
-
 });
 
+var Account = Backbone.Model.extend({
+});
+
+var AccountView = Backbone.View.extend({
+	events: {
+		submit: 'changeName',
+	},
+
+	initialize: function () {
+		this.model.on('change', this.render, this);
+		this.$el.append('<form id=account><input id=username> <input type=submit value="Set name"></form>');
+	},
+
+	render: function () {
+		this.$('#username').val(this.model.get('name') || '');
+		return this;
+	},
+
+	changeName: function (event) {
+		event.preventDefault();
+		var name = this.$('#username').val().trim();
+		console.log(name);
+		if (name)
+			send('setName', {name: name});
+	},
+});
+
+var account = new Account;
 var hand = new Cards;
 var game = new Game;
 
+window.account = account;
 window.hand = hand;
 window.game = game;
 
@@ -180,7 +225,12 @@ function send(type, msg) {
 
 window.sock = new SockJS('http://localhost:8000/sockjs');
 sock.onopen = function () {
-	send('login', {name: 'anon'});
+	var id = localStorage.getItem('camId');
+	if (!id) {
+		id = randomId();
+		localStorage.setItem('camId', id);
+	}
+	send('login', {id: id});
 };
 
 sock.onmessage = function (msg) {
@@ -198,6 +248,10 @@ sock.onclose = function () {
 };
 
 var dispatch = {
+	account: function () {
+		game.set({account: new Account({name: this.name})});
+	},
+
 	set: function () {
 		var target = 'game';
 		if (this.t) {
@@ -242,12 +296,8 @@ var dispatch = {
 	},
 };
 
-/*
-Backbone.Sync = function (method, model, opts) {
-	console.log('sync', method, model, opts);
-	if (method == 'read')
-		send(method, model.attributes);
-};
-*/
+function randomId() {
+        return '' + (Math.floor(Math.random() * 1e16) + 1);
+}
 
 //})();

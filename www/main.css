@@ -63,7 +63,8 @@ li a {
 ul {
 	list-style: none;
 }
-#roster {
+#account, #roster {
+	clear: right;
 	float: right;
 }
 #status {

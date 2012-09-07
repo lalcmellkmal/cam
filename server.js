@@ -58,17 +58,16 @@ function setupRound(cb) {
             if (!blacks.length)
                 return cb("Empty black deck!");
             var m = SHARED_REDIS.multi();
+
+            // TEMP XXX COMPLETE DATA LOSS PLS GO
+            m.flushdb();
+
             function makeDeck(key, deck) {
                 m.del(key);
-                deck = _.uniq(deck);
-                //shuffle(deck); // set is unordered
-                m.sadd(key, deck);
-            } 
-            makeDeck('whites', whites);
-            makeDeck('blacks', blacks);
-
-            // TEMP
-            m.del(['player:anon', 'player:anon:hand', 'game:1']);
+                m.sadd(key, _.uniq(deck));
+            }
+            makeDeck('cam:whites', whites);
+            makeDeck('cam:blacks', blacks);
 
             m.exec(cb);
         });
@@ -111,10 +110,16 @@ function startServer() {
 function Game() {
     this.r = SHARED_REDIS;
     this.id = 1;
-    this.key = 'game:1';
+    this.key = 'cam:game:1';
     this.players = [];
     this.state = 'waiting';
 }
+
+Game.load = function (id, cb) {
+    if (!(id in GAMES))
+        GAMES[id] = new Game;
+    cb(null, GAMES[id]);
+};
 
 var G = Game.prototype;
 
@@ -131,8 +136,9 @@ G.addPlayer = function (player) {
         self.players.push(player);
         player.on('select', self.onSelection.bind(self));
         player.on('dropped', self.dropPlayer.bind(self, player));
+        player.on('change:name', self.broadcastRoster.bind(self));
 
-        self.sendAll('set', {roster: self.makeRoster()});
+        self.broadcastRoster();
         self.sendState(player);
         self.startRound();
     });
@@ -140,6 +146,14 @@ G.addPlayer = function (player) {
 
 G.makeRoster = function () {
     return this.players.map(function (p) { return p.toJSON(); });
+};
+
+G.sendRoster = function (dest) {
+    dest.send('set', {roster: this.makeRoster()});
+};
+
+G.broadcastRoster = function () {
+    this.sendAll('set', {roster: this.makeRoster()});
 };
 
 G.dropPlayer = function (player) {
@@ -151,7 +165,7 @@ G.startRound = function () {
         return;
     var self = this;
     this.state = 'starting';
-    this.r.spop('blacks', function (err, black) {
+    this.r.spop('cam:blacks', function (err, black) {
         if (err) {
             self.state = 'waiting';
             return self.fail(err);
@@ -257,27 +271,27 @@ G.onSelection = function () {
         shuffle(submissions);
 
         var m = self.r.multi();
-        m.hmset(self.key, {state: 'ranking', submissions: JSON.stringify(submissions)});
         submissions.forEach(function (sub) {
             sub.player.handOverSubmission(m, sub);
             delete sub.player;
         });
+        m.hmset(self.key, {state: 'ranking', submissions: JSON.stringify(submissions)});
         m.exec(function (err) {
             if (err)
                 return revert(err);
 
-            self.submissions = submissions;
-            self.sendAll('set', {submissions: self.anonymizedSubmissions()});
             self.players.forEach(function (player) {
                 player.confirmSubmission(submissionIds);
             });
+            self.submissions = submissions;
+            self.sendAll('set', {submissions: self.anonymizedSubmissions()});
         });
     });
 };
 
 G.anonymizedSubmissions = function () {
     return this.submissions.map(function (sub) {
-        return {card: sub.card};
+        return {cards: sub.cards};
     });
 };
 
@@ -285,7 +299,7 @@ function Client(sock) {
     events.EventEmitter.call(this);
     this.sock = sock;
     this.r = SHARED_REDIS;
-    this.state = 'spec';
+    this.state = 'new';
     this.buffer = [];
 }
 util.inherits(Client, events.EventEmitter);
@@ -293,7 +307,7 @@ util.inherits(Client, events.EventEmitter);
 var C = Client.prototype;
 
 C.toJSON = function () {
-    return {name: this.name};
+    return {name: this.name || '<anon>'};
 };
 
 C.onMessage = function (data) {
@@ -340,35 +354,122 @@ C.flush = function () {
 };
 
 C.handle_login = function (msg) {
-    if (this.state != 'spec' || !(typeof msg.name == 'string'))
+    if (this.state != 'new' || !(typeof msg.id == 'string'))
         return this.warn("Can't login.");
-    var name = msg.name.replace(/[^\w .?\/<>'\[\]{}|\\\-+=!@#$%^&*()]+/g, '').trim();
+    var fakeId = msg.id;
+    if (!fakeId.match(/^\d{1,20}$/))
+        return this.warn("Bad id.");
+    var self = this;
+    // Get them a user ID first
+    this.r.hget('cam:userIds', fakeId, function (err, realId) {
+        if (err)
+            return self.drop(err);
+        if (realId) {
+            self.id = realId;
+            self.loadUser();
+            return;
+        }
+        self.r.incr('cam:userCtr', function (err, realId) {
+            if (err)
+                return self.drop(err);
+            self.r.hsetnx('cam:userIds', fakeId, realId, function (err, wasSet) {
+                if (err)
+                    return self.drop(err);
+                else if (!wasSet)
+                    return self.drop("Couldn't save your account.");
+                self.id = realId;
+                self.loadUser();
+            });
+        });
+    });
+};
+
+C.loadUser = function () {
+    if (this.state != 'new')
+        return this.warn("User already loaded!");
+
+    this.state = 'spec';
+    this.key = 'cam:user:' + this.id;
+    var self = this;
+    this.r.hget(this.key, 'name', function (err, name) {
+        if (err)
+            return self.drop(err);
+        self.name = name || null;
+        self.send('set', {t: 'account', name: name});
+        self.loadGame();
+    });
+};
+
+C.handle_setName = function (msg) {
+    if (this.state == 'new')
+        return this.warn('Not logged in!');
+    if (typeof msg.name != 'string')
+        return this.drop('No name!');
+    var name = msg.name.replace(/[^\w .?\/<>'\[\]{}|\\\-+=!@#$%^&*()]+/g, '');
+    name = name.replace(/\s+/g, ' ').trim();
     if (!name)
         return this.drop('Bad name.');
-    this.name = name;
-    this.key = 'player:' + name;
-    this.send('set', {status: 'Logged in as ' + msg.name + '.'});
+    var oldName = this.name;
+    if (name == oldName)
+        return;
+    var self = this;
+    this.r.hsetnx('cam:userNames', name, this.id, function (err, success) {
+        if (err)
+            return self.drop(err);
+        if (!success)
+            return self.warn("Name is already taken.");
+        var m = self.r.multi();
+        if (oldName)
+            m.hdel('cam:userNames', oldName);
+        m.hset(self.key, 'name', name).exec(function (err) {
+            if (err) {
+                self.warn("Lost username " + name + "!");
+                return self.drop(err);
+            }
+            self.name = name;
+            self.emit('change:name', name);
+            self.send('set', {t: 'account', name: name});
+            self.send('set', {status: 'Your name is now "' + name + '".'});
+        });
+    });
+};
+
+C.loadGame = function (msg) {
     var self = this;
     this.r.hget(this.key, 'game', function (err, gameId) {
         if (err)
             return self.drop(err);
-
-        if (gameId) {
-            var game = GAMES[gameId];
-            if (!game)
-                return self.drop("Couldn't find your game.");
-            self.state = 'playing';
-            self.sendHand();
-            self.send('set', {roster: game.makeRoster()});
-            game.sendState(self);
-        }
-        else {
+        var playing = true;
+        if (!gameId) {
             gameId = 1;
-            if (!GAMES[gameId])
-                GAMES[gameId] = new Game;
-            var game = GAMES[gameId];
-            game.addPlayer(self);
+            playing = false;
         }
+        Game.load(gameId, function (err, game) {
+            if (err)
+                return self.drop(err);
+            if (playing) {
+                self.state = 'playing';
+                self.sendHand();
+            }
+            else
+                self.send('set', {canJoin: true});
+            game.sendRoster(self);
+            game.sendState(self);
+        });
+    });
+};
+
+C.handle_join = function (msg) {
+    var gameId = 1;
+    var self = this;
+    this.r.hget(this.key, 'game', function (err, existing) {
+        if (existing)
+            return self.warn('Already in a game!');
+        Game.load(gameId, function (err, game) {
+            if (err)
+                return self.drop(err);
+            game.addPlayer(self);
+        });
     });
 };
 
@@ -400,7 +501,7 @@ C.tryJoining = function (gameId, cb) {
 C.dealInitialHand = function () {
     var m = this.r.multi();
     for (var i = 0; i < HAND_SIZE; i++)
-        m.spop('whites');
+        m.spop('cam:whites');
     var self = this;
     m.exec(function (err, rs) {
         if (err)
@@ -461,7 +562,7 @@ C.checkSubmission = function (count, cb) {
             return cb(err);
         if (!rs.every(function (n) { return n; }))
             return cb(null, false);
-        cb(null, {id: self.name, cards: self.selection});
+        cb(null, {id: self.id, cards: self.selection});
     });
 };
 
@@ -470,7 +571,7 @@ C.handOverSubmission = function (m, submission) {
 };
 
 C.confirmSubmission = function (mapping) {
-    var sub = mapping[this.name];
+    var sub = mapping[this.id];
     if (sub)
         this.send('select', {cards: sub.cards, final: true});
     else
