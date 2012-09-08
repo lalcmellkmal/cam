@@ -1,11 +1,14 @@
 var _ = require('underscore'),
     async = require('async'),
     common = require('./common'),
-    events = require('events'),
     fs = require('fs'),
+    Model = require('./model').Model,
+    StateMachine = require('./state-machine').StateMachine,
     util = require('util');
 
 var HAND_SIZE = 7;
+var MIN_PLAYERS = 1;
+
 var GAMES = {};
 var PLAYERS = {};
 
@@ -13,16 +16,19 @@ var SHARED_REDIS;
 exports.setRedis = function (r) { SHARED_REDIS = r; };
 
 function Game() {
+    Model.call(this);
+
     this.r = SHARED_REDIS;
     this.id = 1;
     this.key = 'cam:game:1';
     this.players = [];
     this.specs = [];
-    this.state = 'waiting';
 
     this.broadcastRosterCb = this.broadcastRoster.bind(this);
-    this.onSelectionCb = this.onSelection.bind(this);
+    this.on('change:players', this.broadcastRosterCb);
+    this.on('change:specs', this.broadcastRosterCb);
 }
+util.inherits(Game, Model);
 exports.Game = Game;
 
 Game.load = function (id, cb) {
@@ -33,9 +39,17 @@ Game.load = function (id, cb) {
 
 var G = Game.prototype;
 
-G.setChanged = function (attr) {
-    this.broadcastRoster(); // temp
-};
+StateMachine.create({
+    target: G,
+    initial: 'inactive',
+    events: [
+        {name: 'newPlayer', from: 'inactive', to: 'nominating'},
+        {name: 'nominate', from: 'nominating', to: 'electing'},
+        {name: 'elect', from: 'electing', to: 'nominating'},
+        {name: 'dropPlayer', from: 'nominating', to: 'electing'},
+        {name: 'notEnoughPlayers', from: ['nominating', 'electing'], to: 'inactive'},
+    ],
+});
 
 G.addSpec = function (client) {
     if (this.specs.indexOf(client) >= 0)
@@ -61,17 +75,18 @@ G.addPlayer = function (player) {
     if (this.players.indexOf(player) >= 0)
         return this.warn('Already playing.');
 
-    player.game = this.id;
+    player.game = this;
     player.dealInitialHand();
     this.players.push(player);
     this.setChanged('players');
-    player.on('select', this.onSelectionCb);
+
     player.on('change:name', this.broadcastRosterCb);
     player.once('dropped', this.dropPlayer.bind(this, player));
 
     if (player.client)
         this.removeSpec(player.client);
-    this.startRound();
+
+    this.newPlayer();
 };
 
 G.dropPlayer = function (player) {
@@ -82,12 +97,13 @@ G.dropPlayer = function (player) {
     this.setChanged('players');
 
     player.game = null;
-    player.removeListener('selection', this.onSelectionCb);
     player.removeListener('change:name', this.broadcastRosterCb);
     player.removeAllListeners('dropped');
 
-    this.onSelection();
-    this.stopRound();
+    if (this.players.length < MIN_PLAYERS)
+        this.notEnoughPlayers();
+    else
+        this.dropPlayer();
 };
 
 G.makeRoster = function () {
@@ -104,26 +120,22 @@ G.broadcastRoster = function () {
     this.sendAll('set', {roster: this.makeRoster()});
 };
 
-G.startRound = function () {
-    if (this.state != 'waiting' || this.players.length < 1) // XXX 2
-        return;
+G.onbeforeelect = function () {
+    return this.players.length >= MIN_PLAYERS;
+};
+
+G.onbeforedropPlayer = G.onbeforeelect;
+
+G.onnominating = function () {
     var self = this;
-    this.state = 'starting';
     this.r.spop('cam:blacks', function (err, black) {
-        if (err) {
-            self.state = 'waiting';
+        if (err)
             return self.fail(err);
-        }
-        if (!black) {
-            self.state = 'waiting';
+        if (!black)
             return self.fail("Out of cards!"); // XXX reshuffle
-        }
-        self.r.hmset(self.key, {state: 'picking', black: black}, function (err) {
-            if (err) {
-                self.state = 'waiting';
+        self.r.hmset(self.key, {state: 'nominating', black: black}, function (err) {
+            if (err)
                 return self.fail(err);
-            }
-            self.state = 'picking';
             self.black = black;
             self.blackInfo = common.parseBlack(black);
             self.sendAll('set', {unlocked: true});
@@ -132,16 +144,8 @@ G.startRound = function () {
     });
 };
 
-
-G.stopRound = function () {
-    if (this.players.length > 1)
-        return;
-    var self = this;
-    this.r.hset(this.key, {state: 'paused'}, function (err) {
-        if (err)
-            self.fail(err);
-        self.state = 'waiting';
-    });
+G.oninactive = function (event, from, to) {
+    this.r.hmset(this.key, {state: 'inactive', black: null});
 };
 
 G.fail = function (err) {
@@ -169,19 +173,19 @@ G.sendState = function (dest) {
     var self = this;
     var info = {unlocked: false};
 
-    switch (this.state) {
-        case 'waiting':
+    switch (this.current) {
+        case 'inactive':
             info.status = 'Waiting for players...';
             break;
-        case 'picking':
+        case 'nominating':
             info.unlocked = true;
             break;
-        case 'ranking':
-            info.status = 'Choose your favorite.';
+        case 'electing':
+            info.status = 'Waiting for choice...';
             info.submissions = this.anonymizedSubmissions();
             break;
         default:
-            console.warn("Unknown state to send: " + this.state);
+            console.warn("Unknown state to send: " + this.current);
             info.status = "Unknown state.";
     }
 
@@ -193,14 +197,11 @@ G.sendState = function (dest) {
         dest.send('black', {black: this.black});
 };
 
-G.onSelection = function () {
-    if (this.state != 'picking')
-        return;
-    if (!this.players.every(function (p) { return p.selection; }))
-        return;
+G.onbeforenominate = function () {
+    return this.players.every(function (p) { return p.selection; });
+};
 
-    this.state = 'ranking';
-
+G.onelecting = function () {
     var submissions = [], submissionIds = {};
     var blankCount = this.blackInfo.blankCount;
     var self = this;
@@ -217,16 +218,11 @@ G.onSelection = function () {
         });
     }
 
-    function revert(err) {
-        self.state = 'picking';
-        self.fail(err);
-    }
-
     async.forEach(this.players, checkSubmission, function (err) {
         if (err)
-            return revert(err);
+            return self.fail(err);
         else if (!submissions.length)
-            return revert('No submissions!'); // need to fail gracefully
+            return self.fail('No submissions!'); // need to fail gracefully
         shuffle(submissions);
 
         var m = self.r.multi();
@@ -234,16 +230,17 @@ G.onSelection = function () {
             sub.player.handOverSubmission(m, sub);
             delete sub.player;
         });
-        m.hmset(self.key, {state: 'ranking', submissions: JSON.stringify(submissions)});
+        m.hmset(self.key, {state: 'electing', submissions: JSON.stringify(submissions)});
         m.exec(function (err) {
             if (err)
-                return revert(err);
+                return self.fail(err);
 
             self.players.forEach(function (player) {
                 player.confirmSubmission(submissionIds);
             });
             self.submissions = submissions;
-            self.sendAll('set', {submissions: self.anonymizedSubmissions()});
+            self.sendAll('set', {status: 'Waiting for choice...',
+                    submissions: self.anonymizedSubmissions()});
         });
     });
 };
@@ -257,12 +254,12 @@ G.anonymizedSubmissions = function () {
 ///////////////////////////////////////////////////////////////////////////////
 
 function Player(id) {
-    events.EventEmitter.call(this);
+    Model.call(this);
     this.id = id;
 
     this.onChangeNameCb = this.onChangeName.bind(this);
 }
-util.inherits(Player, events.EventEmitter);
+util.inherits(Player, Model);
 exports.Player = Player;
 
 var P = Player.prototype;
@@ -316,8 +313,8 @@ P.adopt = function (client) {
     client.once('disconnected', this.abandon.bind(this));
 
     if (this.game) {
-        if (client.state == 'spec');
-        this.sendHand();
+        if (client.state != 'spec')
+            this.sendHand();
     }
     else
         this.send('set', {canJoin: true});
@@ -405,11 +402,14 @@ function cardsFromNames(hand) {
 P.handle_select = function (msg) {
     var cards = msg.cards;
 
+    if (!this.game)
+        return;
+
     if (!cards || !_.isArray(cards) || !cards.length) {
         // Clear selection
         this.selection = null;
         this.send('select', {cards: []});
-        this.emit('select');
+        this.game.nominate();
         return;
     }
 
@@ -421,10 +421,12 @@ P.handle_select = function (msg) {
     // TEMP
     var self = this;
     setTimeout(function () {
+    if (!self.game)
+        return;
 
     self.selection = msg.cards;
     self.send('select', {cards: msg.cards});
-    self.emit('select');
+    self.game.nominate();
 
     // TEMP
     }, 500);
