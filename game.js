@@ -33,14 +33,18 @@ Game.load = function (id, cb) {
 
 var G = Game.prototype;
 
+G.setChanged = function (attr) {
+    this.broadcastRoster(); // temp
+};
+
 G.addSpec = function (client) {
     if (this.specs.indexOf(client) >= 0)
         return this.warn('Already watching.');
     this.specs.push(client);
+    this.setChanged('specs');
     client.on('change:name', this.broadcastRosterCb);
     client.once('disconnected', this.removeSpec.bind(this, client));
     this.sendState(client);
-    this.broadcastRoster();
 };
 
 G.removeSpec = function (client) {
@@ -48,32 +52,26 @@ G.removeSpec = function (client) {
     if (i < 0)
         return;
     this.specs.splice(i, 1);
+    this.setChanged('specs');
     client.removeListener('change:name', this.broadcastRosterCb);
     client.removeAllListeners('disconnected');
-    this.broadcastRoster();
 };
 
 G.addPlayer = function (player) {
     if (this.players.indexOf(player) >= 0)
         return this.warn('Already playing.');
-    var self = this;
-    player.tryJoining(this.id, function (err, joined) {
-        if (err)
-            return player.drop(err);
-        else if (!joined)
-            return player.warn("Couldn't join game.");
 
-        self.players.push(player);
-        player.on('select', self.onSelectionCb);
-        player.on('change:name', self.broadcastRosterCb);
-        player.once('dropped', self.dropPlayer.bind(self, player));
+    player.game = this.id;
+    player.dealInitialHand();
+    this.players.push(player);
+    this.setChanged('players');
+    player.on('select', this.onSelectionCb);
+    player.on('change:name', this.broadcastRosterCb);
+    player.once('dropped', this.dropPlayer.bind(this, player));
 
-        if (player.client)
-            self.removeSpec(player.client);
-        else
-            self.broadcastRoster();
-        self.startRound();
-    });
+    if (player.client)
+        this.removeSpec(player.client);
+    this.startRound();
 };
 
 G.dropPlayer = function (player) {
@@ -81,18 +79,15 @@ G.dropPlayer = function (player) {
     if (i < 0)
         return this.warn("Player not in player list!");
     this.players.splice(i, 1);
-    var self = this;
-    player.tryLeaving(this.id, function (cb, err) {
-        if (err)
-            return player.drop(err);
-        player.removeListener('selection', self.onSelectionCb);
-        player.removeListener('change:name', self.broadcastRosterCb);
-        player.removeAllListeners('dropped');
+    this.setChanged('players');
 
-        self.broadcastRoster();
-        self.onSelection();
-        self.stopRound();
-    });
+    player.game = null;
+    player.removeListener('selection', this.onSelectionCb);
+    player.removeListener('change:name', this.broadcastRosterCb);
+    player.removeAllListeners('dropped');
+
+    this.onSelection();
+    this.stopRound();
 };
 
 G.makeRoster = function () {
@@ -349,32 +344,6 @@ P.toJSON = function () {
     var json = this.client ? this.client.toJSON() : {name: '<dropped>'};
     json.kind = 'player';
     return json;
-};
-
-P.tryJoining = function (gameId, cb) {
-    var self = this;
-    this.r.hsetnx(this.key, 'game', gameId, function (err, joined) {
-        if (err)
-            return cb(err);
-        if (!joined)
-            return cb(null, false);
-        self.game = gameId;
-        self.dealInitialHand();
-        cb(null, true);
-    });
-};
-
-P.tryLeaving = function (gameId, cb) {
-    var self = this;
-    // really ought to do some checking first
-    this.r.hdel(this.key, 'game', gameId, function (err, gone) {
-        if (err)
-            return cb(err);
-        if (!gone)
-            return cb(null, false);
-        self.game = null;
-        cb(null, true);
-    });
 };
 
 P.dealInitialHand = function () {
