@@ -15,6 +15,7 @@ var Cards = Backbone.Collection.extend({
 			if (card !== opts.except)
 				card.set({index: 0, state: 'normal'});
 		});
+		send('select', {});
 	},
 });
 
@@ -28,7 +29,7 @@ var CardView = Backbone.View.extend({
 	select: function (event) {
 		if (!game.get('unlocked'))
 			return;
-		if (this.model.get('state') == 'selecting')
+		if (this.model.get('state') != 'normal')
 			hand.resetSelections();
 		else
 			this.model.set({state: 'selecting'});

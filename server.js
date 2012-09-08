@@ -529,8 +529,15 @@ function cardsFromNames(hand) {
 
 P.handle_select = function (msg) {
     var cards = msg.cards;
-    if (!_.isArray(cards) || !cards.length)
-        return this.warn("No cards selected!");
+
+    if (!cards || !_.isArray(cards) || !cards.length) {
+        // Clear selection
+        this.selection = null;
+        this.send('select', {cards: []});
+        this.emit('select');
+        return;
+    }
+
     if (!cards.every(function (card) { return typeof card == 'string'; }))
         return this.warn("Invalid choices!");
     if (_.uniq(cards).length != cards.length)
