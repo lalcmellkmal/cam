@@ -2,7 +2,7 @@ var _ = require('underscore'),
     fs = require('fs'),
     child_process = require('child_process');
 
-var SERVER_DEPS = ['server.js', 'config.js', 'common.js', 'client.js'];
+var SERVER_DEPS = ['server.js', 'game.js', 'config.js', 'common.js', 'client.js'];
 
 var server;
 var start_server = _.debounce(function () {
