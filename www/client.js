@@ -147,8 +147,14 @@ var GameView = Backbone.View.extend({
 	},
 
 	renderRoster: function () {
-		var roster = _.pluck(this.model.get('roster'), 'name');
-		this.$('#roster').text('Players: ' + roster.join(', '));
+		var roster = this.model.get('roster');
+		var $list = this.$('#roster').empty();
+		_.each(roster, function (player) {
+			$list.append($('<a/>', {
+				text: player.name,
+				class: player.kind,
+			}), '<br>');
+		});
 	},
 
 	renderBlack: function () {
@@ -292,7 +298,8 @@ var dispatch = {
 				return;
 			card.set({state: dest});
 		});
-		hand.remove(targets);
+		if (final)
+			hand.remove(targets);
 	},
 };
 

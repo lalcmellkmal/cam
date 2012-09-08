@@ -67,6 +67,12 @@ ul {
 	clear: right;
 	float: right;
 }
+#roster {
+	text-align: right;
+}
+#roster .spec {
+	color: #999;
+}
 #status {
 	clear: both;
 	font-weight: bold;
