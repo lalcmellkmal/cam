@@ -143,30 +143,39 @@ C.loadUser = function (id) {
     this.id = id;
     this.key = 'cam:user:' + id;
     var self = this;
-    this.watchGame(1, function (err) {
+    this.r.hget(this.key, 'name', function (err, name) {
         if (err)
             return self.drop(err);
-
-        self.r.hget(self.key, 'name', function (err, name) {
+        self.name = name || null;
+        self.send('set', {t: 'account', name: name});
+        game.Player.load(self.r, self.id, function (err, player) {
             if (err)
-                return self.drop(err);
-            self.name = name || null;
-            self.send('set', {t: 'account', name: name});
-            game.Player.load(self.r, self.id, function (err, player) {
-                if (err)
-                    self.drop(err);
-                player.adopt(self);
-            });
+                self.drop(err);
+
+            var alreadyPlaying = false;
+            if (player.adopt(self))
+                alreadyPlaying = !!player.game;
+
+            if (!alreadyPlaying) {
+                self.watchGame(1, function (err) {
+                    if (err)
+                        return self.drop(err);
+                });
+            }
         });
     });
 };
 
 C.watchGame = function (gameId, cb) {
+    if (this.state == 'spec')
+        return;
     this.state = 'spec';
     var self = this;
     game.Game.load(gameId, function (err, gameObj) {
-        if (err)
+        if (err) {
+            self.state = 'new';
             return cb(err);
+        }
         gameObj.addSpec(self);
         cb(null);
     });
@@ -200,8 +209,7 @@ C.handle_setName = function (msg) {
             }
             self.name = name;
             self.emit('change:name', name);
-            self.send('set', {t: 'account', name: name});
-            self.send('set', {status: 'Your name is now "' + name + '".'});
+            self.send('set', {t: 'account', name: name, status: 'Your name is now "' + name + '".'});
         });
     });
 };

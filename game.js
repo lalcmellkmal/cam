@@ -86,6 +86,7 @@ G.addPlayer = function (player) {
     if (player.client)
         this.removeSpec(player.client);
 
+    this.sendState(player);
     this.newPlayer();
 };
 
