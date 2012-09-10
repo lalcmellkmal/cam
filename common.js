@@ -11,8 +11,10 @@ exports.parseBlack = function (black) {
     for (var i = 1; i < tokens.length; i += 2) {
         var blank = {};
         var before = tokens[i-1], after = tokens[i+1];
-        if (before.match(/\b(?:the|a|an|my|your|his|her|their)\s+$/i))
+        if (before.match(/\b(?:the|a|an|my|your|yo'|his|her|their)\s+$/i))
             blank.omitArticle = true;
+        if (before.match(/\bbeing\s+$/i))
+            blank.omitBeing = true;
         if (after)
             blank.omitPeriod = true;
         tokens[i] = blank;
@@ -38,6 +40,11 @@ exports.applySubmission = function (black, sub) {
     for (var i = 0; i < whites.length; i++) {
         var white = whites[i];
         var blank = black.tokens[i*2 + 1] || {};
+        if (blank.omitBeing) {
+            var beingSkip = white.match(/^being\s+(.+)$/i);
+            if (beingSkip)
+                white = beingSkip[1];
+        }
         if (blank.omitArticle) {
             var articleSkip = white.match(/^(?:the|a|an|my|your)\s+(.+)$/i);
             if (articleSkip)
