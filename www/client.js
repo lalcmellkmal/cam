@@ -198,10 +198,20 @@ var GameView = Backbone.View.extend({
 			return $subs.hide();
 		$subs.empty();
 		var self = this;
+		var fadeIns = [];
 		_.each(subs, function (sub) {
-			$subs.append(self.renderSubmission(black, sub));
+			var $a = self.renderSubmission(black, sub);
+			$a.css({opacity: 0}).appendTo($subs);
+			fadeIns.push($a);
 		});
 		$subs.show();
+
+		function showNext() {
+			if (!fadeIns.length)
+				return;
+			fadeIns.shift().animate({opacity: 1}, {complete: showNext});
+		}
+		showNext();
 	},
 
 	renderSubmission: function (black, sub) {
