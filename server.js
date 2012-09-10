@@ -185,6 +185,8 @@ C.isPlaying = function () {
     return false;
 };
 
+var BAD_NAMES = ['anon', 'anonymous', 'dealer', 'admin', 'administrator', 'mod', 'moderator'];
+
 C.handle_setName = function (msg) {
     if (this.state == 'new')
         return this.warn('Not logged in!');
@@ -192,8 +194,10 @@ C.handle_setName = function (msg) {
         return this.drop('No name!');
     var name = msg.name.replace(/[^\w .?\/<>'|\\\-+=!#$&*`~]+/g, '');
     name = name.replace(/\s+/g, ' ').trim().slice(0, 30);
-    if (!name || name.toLowerCase() == 'dealer')
-        return this.drop('Bad name.');
+    if (!name)
+        return this.warn('Bad name.');
+    if (BAD_NAMES.indexOf(name.toLowerCase()) >= 0)
+        return this.warn("Name is already taken.");
     var oldName = this.name;
     if (name == oldName)
         return;
