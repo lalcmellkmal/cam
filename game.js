@@ -148,11 +148,9 @@ G.broadcastRoster = function () {
     this.sendAll('set', {roster: this.makeRoster()});
 };
 
-G.onbeforeelect = function () {
+G.onbeforenewPlayer = function () {
     return this.players.length >= MIN_PLAYERS;
 };
-
-G.onbeforedropPlayer = G.onbeforeelect;
 
 G.onnominating = function () {
     var self = this;
