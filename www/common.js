@@ -13,7 +13,7 @@ exports.parseBlack = function (black) {
         var before = tokens[i-1], after = tokens[i+1];
         if (before.match(/\b(?:the|a|an)\s+$/i))
             blank.omitArticle = true;
-        if (after && !after.match(/^\s+\/\s+$/))
+        if (after)
             blank.omitPeriod = true;
         tokens[i] = blank;
         if (before.length >= 60)
