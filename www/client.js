@@ -143,12 +143,11 @@ var GameView = Backbone.View.extend({
 		this.$('#status').text(attrs.status).prop('class', attrs.error ? 'error' : '');
 	},
 
-	renderCanJoin: function () {
-		this.$('#join').toggle(!!this.model.get('canJoin'));
+	renderCanJoin: function (model, canJoin) {
+		this.$('#join').toggle(!!canJoin);
 	},
 
-	renderRoster: function () {
-		var roster = this.model.get('roster');
+	renderRoster: function (model, roster) {
 		var $list = this.$('#roster').empty();
 		_.each(roster, function (player) {
 			var $a = $('<a/>', {
@@ -161,8 +160,7 @@ var GameView = Backbone.View.extend({
 		});
 	},
 
-	renderBlack: function () {
-		var black = this.model.get('black');
+	renderBlack: function (model, black) {
 		var $black = this.$('.black:first');
 		if (!black) {
 			$black.hide();
@@ -172,13 +170,12 @@ var GameView = Backbone.View.extend({
 		$black.show();
 	},
 
-	renderHandLock: function () {
-		this.$('#myHand').toggleClass('unlocked', this.model.get('unlocked'));
+	renderHandLock: function (model, unlocked) {
+		this.$('#myHand').toggleClass('unlocked', unlocked);
 	},
 
 	// share with handview?
-	renderSubmissions: function () {
-		var subs = this.model.get('subs');
+	renderSubmissions: function (model, subs) {
 		var $subs = this.$('#submissions');
 		if (!subs || !subs.length)
 			return $subs.hide();
