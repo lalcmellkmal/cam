@@ -354,7 +354,7 @@ G.gotElection = function (player, choice) {
         return player.warn("Invalid choice.");
 
     var m = this.r.multi();
-    m.hincrby(this.key, 'scores', 1);
+    m.hincrby(this.key + ':scores', winner, 1);
     m.hincrby('cam:user:' + winner, 'score', 1);
     var self = this;
     m.exec(function (err, rs) {
