@@ -12,8 +12,6 @@ var MIN_PLAYERS = 2;
 var GAMES = {};
 var PLAYERS = {};
 
-var DECK_FILES = fs.readdirSync('sets');
-
 var SHARED_REDIS;
 exports.setRedis = function (r) { SHARED_REDIS = r; };
 
@@ -160,23 +158,44 @@ G.onnominating = function () {
     if (!this.dealer)
         this.dealer = this.players[0].id;
 
-    this.r.spop('cam:blacks', function (err, black) {
+    this.r.spop(this.key + ':blacks', function (err, black) {
         if (err)
             return self.fail(err);
-        if (!black)
-            return self.fail("Out of cards!"); // XXX reshuffle
-        if (self.current != 'nominating')
-            return;
-        self.r.hmset(self.key, {state: 'nominating', black: black}, function (err) {
+        if (black)
+            return self.disclaimBlack(black);
+        // Reshuffle blacks
+        var m = self.r.multi();
+        m.rename(self.key + ':blackDiscards', self.key + ':blacks');
+        m.spop(self.key + ':blacks');
+        m.exec(function (err, rs) {
             if (err)
                 return self.fail(err);
-            if (self.current != 'nominating')
-                return self.saveState();
-            if (!self.getDealerPlayer())
-                return self.fail("No dealer!");
-            self.set({black: common.parseBlack(black)});
+            self.disclaimBlack(rs[1]);
         });
     });
+}
+
+G.disclaimBlack = function (black) {
+    if (this.current != 'nominating')
+        return;
+    var m = this.r.multi();
+    m.hmset(this.key, {state: 'nominating', black: black});
+    m.sadd(this.key + ':blackDiscards', black);
+    var self = this;
+    m.exec(function (err) {
+        if (err)
+            return self.fail(err);
+        if (self.current != 'nominating')
+            return self.saveState();
+        if (!self.getDealerPlayer())
+            return self.fail("No dealer!");
+        self.set({black: common.parseBlack(black)});
+    });
+};
+
+G.popWhites = function (m, n) {
+    for (var i = 0; i < n; i++)
+        m.spop(this.key + ':whites');
 };
 
 G.getDealerPlayer = function () {
@@ -293,7 +312,7 @@ G.onelecting = function () {
 
         var m = self.r.multi();
         submissions.forEach(function (sub) {
-            sub.player.handOverSubmission(m, sub);
+            sub.player.handOverSubmission(m, sub, self.key + ':whiteDiscards');
             delete sub.player;
         });
         m.hmset(self.key, {state: 'electing', submissions: JSON.stringify(submissions)});
@@ -487,12 +506,11 @@ P.dealHand = function (fresh) {
             return self.drop(err);
         if (fresh)
             oldCardCount = 0;
-        if (oldCardCount >= HAND_SIZE)
+        if (!self.game || oldCardCount >= HAND_SIZE)
             return;
 
         var m = self.r.multi();
-        for (var i = oldCardCount; i < HAND_SIZE; i++)
-            m.spop('cam:whites');
+        self.game.popWhites(m, HAND_SIZE - oldCardCount);
         m.exec(function (err, rs) {
             if (err)
                 return self.drop(err);
@@ -609,8 +627,9 @@ P.checkSubmission = function (count, cb) {
     });
 };
 
-P.handOverSubmission = function (m, submission) {
+P.handOverSubmission = function (m, submission, discards) {
     m.srem(this.key + ':hand', submission.cards);
+    m.sadd(discards, submission.cards);
 };
 
 P.confirmSubmission = function (mapping) {
@@ -647,45 +666,49 @@ function loadDeck(filename, dest, cb) {
 }
 
 function setupRound(cb) {
-
-    var whiteSets = [], blackSets = [];
-    DECK_FILES.forEach(function (set) {
-        if (set.match(/black/i))
-            blackSets.push(set);
-        else
-            whiteSets.push(set);
-    });
-
-    var whites = [], blacks = [];
-
-    function loader(deck) {
-        return function (name, cb) {
-            loadDeck('sets/'+name, deck, cb);
-        };
-    }
-    async.forEach(whiteSets, loader(whites), function (err) {
+    fs.readdir('sets', function (err, sets) {
         if (err)
             return cb(err);
-        if (!whites.length)
-            return cb("Empty white deck!");
-        async.forEach(blackSets, loader(blacks), function (err) {
+        var whiteSets = [], blackSets = [];
+        sets.forEach(function (set) {
+            if (set.match(/black/i))
+                blackSets.push(set);
+            else
+                whiteSets.push(set);
+        });
+
+        var whites = [], blacks = [];
+
+        function loader(deck) {
+            return function (name, cb) {
+                loadDeck('sets/'+name, deck, cb);
+            };
+        }
+        async.forEach(whiteSets, loader(whites), function (err) {
             if (err)
                 return cb(err);
-            if (!blacks.length)
-                return cb("Empty black deck!");
-            var m = SHARED_REDIS.multi();
+            if (!whites.length)
+                return cb("Empty white deck!");
+            async.forEach(blackSets, loader(blacks), function (err) {
+                if (err)
+                    return cb(err);
+                if (!blacks.length)
+                    return cb("Empty black deck!");
 
-            // TEMP XXX COMPLETE DATA LOSS PLS GO
-            m.flushdb();
+                var m = SHARED_REDIS.multi();
 
-            function makeDeck(key, deck) {
-                m.del(key);
-                m.sadd(key, _.uniq(deck));
-            }
-            makeDeck('cam:whites', whites);
-            makeDeck('cam:blacks', blacks);
+                // TEMP XXX COMPLETE DATA LOSS PLS GO
+                m.flushdb();
 
-            m.exec(cb);
+                function makeDeck(key, deck) {
+                    m.del(key);
+                    m.sadd(key, _.uniq(deck));
+                }
+                makeDeck('cam:game:1:whites', whites);
+                makeDeck('cam:game:1:blacks', blacks);
+
+                m.exec(cb);
+            });
         });
     });
 }
