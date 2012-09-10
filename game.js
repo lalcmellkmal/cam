@@ -219,7 +219,7 @@ G.sendState = function (dest) {
     var self = this;
     var player = dest.isPlaying();
     var dealer = player && dest.id == this.dealer;
-    var info = {unlocked: false, elect: false, submissions: null};
+    var info = {action: null, submissions: null};
     info.black = this.black ? this.black.card : null;
 
     switch (this.current) {
@@ -232,7 +232,7 @@ G.sendState = function (dest) {
             else if (dealer)
                 info.status = 'You are the dealer. Waiting for submissions...';
             else {
-                info.unlocked = true;
+                info.action = 'nominate';
                 var n = this.black.blankCount;
                 var word = {1: 'one', 2: 'two', 3: 'three'}[n];
                 info.status = 'Pick ' + (word || n) + '.';
@@ -241,7 +241,7 @@ G.sendState = function (dest) {
         case 'electing':
             if (dealer) {
                 info.status = 'Pick your favorite.';
-                info.elect = true;
+                info.action = 'elect';
             }
             else
                 info.status = 'Dealer is picking their favorite...';

@@ -27,7 +27,7 @@ var CardView = Backbone.View.extend({
 	},
 
 	select: function (event) {
-		if (!game.get('unlocked'))
+		if (game.get('action') != 'nominate')
 			return;
 		if (this.model.get('state') != 'normal')
 			hand.resetSelections();
@@ -130,7 +130,7 @@ var GameView = Backbone.View.extend({
 		this.model.on('change:canJoin', this.renderCanJoin, this);
 		this.model.on('change:roster', this.renderRoster, this);
 		this.model.on('change:black', this.renderBlack, this);
-		this.model.on('change:unlocked change:elect', this.renderLocks, this);
+		this.model.on('change:action', this.renderAction, this);
 		this.model.on('change:submissions change:blackInfo', this.renderSubmissions, this);
 	},
 
@@ -140,6 +140,8 @@ var GameView = Backbone.View.extend({
 	},
 
 	elect: function (event) {
+		if (this.model.get('action') != 'elect')
+			return;
 		var cards = $(event.currentTarget).data('cards');
 		if (cards)
 			send('elect', {cards: cards});
@@ -182,10 +184,10 @@ var GameView = Backbone.View.extend({
 		$black.toggle(!!black);
 	},
 
-	renderLocks: function () {
-		var attrs = this.model.attributes;
-		this.$('#myHand').toggle(!attrs.elect).toggleClass('unlocked', attrs.unlocked);
-		this.$('#submissions').toggleClass('electing', attrs.elect);
+	renderAction: function (model, action) {
+		var electing = action == 'elect';
+		this.$('#myHand').toggle(!electing).toggleClass('unlocked', action == 'nominate');
+		this.$('#submissions').toggleClass('electing', electing);
 	},
 
 	renderSubmissions: function () {
