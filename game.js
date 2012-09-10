@@ -236,6 +236,7 @@ G.sendState = function (dest) {
                 var n = this.black.blankCount;
                 var word = {1: 'one', 2: 'two', 3: 'three'}[n];
                 info.status = 'Pick ' + (word || n) + '.';
+                dest.remindSubmission();
             }
             break;
         case 'electing':
@@ -435,8 +436,12 @@ P.adopt = function (client) {
     client.once('disconnected', this.abandon.bind(this));
 
     if (this.isPlaying()) {
-        this.game.sendState(this);
-        this.sendHand();
+        var self = this;
+        this.sendHand(function (err) {
+            if (err)
+                self.drop(err);
+            self.game.sendState(self);
+        });
     }
     else
         this.send('set', {canJoin: true});
@@ -507,12 +512,13 @@ P.dealHand = function (fresh) {
     });
 };
 
-P.sendHand = function () {
+P.sendHand = function (cb) {
     var self = this;
     this.r.smembers(this.key + ':hand', function (err, hand) {
         if (err)
-            return self.drop(err);
+            return cb(err);
         self.send('hand', {hand: cardsFromNames(hand)});
+        cb(null);
     });
 };
 
@@ -548,7 +554,6 @@ P.handle_submit = function (msg) {
         // Clear selection
         this.selection = null;
         this.send('select', {cards: []});
-        this.game.nominate();
         return;
     }
 
@@ -564,11 +569,16 @@ P.handle_submit = function (msg) {
         return;
 
     self.selection = msg.cards;
-    self.send('select', {cards: msg.cards});
+    self.remindSubmission();
     self.game.nominate();
 
     // TEMP
     }, 500);
+};
+
+P.remindSubmission = function () {
+    if (this.selection)
+        this.send('select', {cards: this.selection});
 };
 
 P.checkSubmission = function (count, cb) {
