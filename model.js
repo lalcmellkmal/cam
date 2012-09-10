@@ -12,20 +12,22 @@ exports.Model = Model;
 var M = Model.prototype;
 M.set = function (hash) {
     for (var k in hash) {
-        this[k] = hash[k];
-        this.setChanged(k);
+        if (this[k] !== hash[k]) {
+            this[k] = hash[k];
+            this.setChanged(k);
+        }
     }
 };
 
 M.setChanged = function (key) {
     this._changed[key] = true;
-    if (!this._changeTimeout) {
-        var self = this;
-        this._changeTimeout = setTimeout(function () {
-            self._changeTimeout = 0;
-            self.change();
-        }, 0);
-    }
+    if (!this._changeTimeout)
+        this._changeTimeout = setTimeout(this._deferredChange.bind(this), 0);
+};
+
+M._deferredChange = function () {
+    this._changeTimeout = 0;
+    this.change();
 };
 
 M.change = function () {

@@ -154,7 +154,7 @@ C.loadUser = function (id) {
 
             var alreadyPlaying = false;
             if (player.adopt(self))
-                alreadyPlaying = !!player.game;
+                alreadyPlaying = player.isPlaying();
 
             if (!alreadyPlaying) {
                 self.watchGame(1, function (err) {
@@ -179,6 +179,10 @@ C.watchGame = function (gameId, cb) {
         gameObj.addSpec(self);
         cb(null);
     });
+};
+
+C.isPlaying = function () {
+    return false;
 };
 
 C.handle_setName = function (msg) {

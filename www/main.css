@@ -73,6 +73,12 @@ ul {
 #roster .spec {
 	color: #999;
 }
+#roster .dealer {
+	color: #fa4;
+}
+#roster .dealer:before {
+	content: 'Dealer: ';
+}
 #status {
 	clear: both;
 	font-weight: bold;

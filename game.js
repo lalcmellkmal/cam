@@ -21,12 +21,18 @@ function Game() {
     this.r = SHARED_REDIS;
     this.id = 1;
     this.key = 'cam:game:1';
+    this.dealer = null;
     this.players = [];
     this.specs = [];
 
     this.broadcastRosterCb = this.broadcastRoster.bind(this);
     this.on('change:players', this.broadcastRosterCb);
     this.on('change:specs', this.broadcastRosterCb);
+
+    var changed = this.gameStateChanged.bind(this);
+    this.on('change:black', changed);
+    this.on('change:dealer', changed);
+    this.on('change:submissions', changed);
 }
 util.inherits(Game, Model);
 exports.Game = Game;
@@ -80,6 +86,9 @@ G.addPlayer = function (player) {
     this.players.push(player);
     this.setChanged('players');
 
+    if (!this.dealer)
+        this.dealer = player.id;
+
     player.on('change:name', this.broadcastRosterCb);
     player.once('dropped', this.dropPlayer.bind(this, player));
 
@@ -97,7 +106,18 @@ G.dropPlayer = function (player) {
     this.players.splice(i, 1);
     this.setChanged('players');
 
-    player.game = null;
+    if (this.dealer == player.id) {
+        var newDealer;
+        if (this.players[i])
+            newDealer = this.players[i].id;
+        else if (this.players[0])
+            newDealer = this.players[0].id;
+        else
+            newDealer = null; // state should change for us
+        self.set({dealer: newDealer});
+    }
+
+    player.set({game: null});
     player.removeListener('change:name', this.broadcastRosterCb);
     player.removeAllListeners('dropped');
 
@@ -108,7 +128,13 @@ G.dropPlayer = function (player) {
 };
 
 G.makeRoster = function () {
-    var roster = this.players.map(function (p) { return p.toJSON(); });
+    var self = this;
+    var roster = this.players.map(function (player) {
+        var json = player.toJSON();
+        if (self.dealer == player.id)
+            json.kind = 'dealer';
+        return json;
+    });
     roster = roster.concat(this.specs.map(function (c) { return c.toJSON(); }));
     return roster;
 };
@@ -129,20 +155,32 @@ G.onbeforedropPlayer = G.onbeforeelect;
 
 G.onnominating = function () {
     var self = this;
+
+    if (!this.dealer)
+        this.dealer = this.players[0].id;
+
     this.r.spop('cam:blacks', function (err, black) {
         if (err)
             return self.fail(err);
         if (!black)
             return self.fail("Out of cards!"); // XXX reshuffle
+        if (self.current != 'nominating')
+            return;
         self.r.hmset(self.key, {state: 'nominating', black: black}, function (err) {
             if (err)
                 return self.fail(err);
-            self.black = black;
-            self.blackInfo = common.parseBlack(black);
-            self.sendAll('set', {unlocked: true});
-            self.sendAll('black', {black: black});
+            if (self.current != 'nominating')
+                return self.saveState();
+            if (!self.getDealerPlayer())
+                return self.fail("No dealer!");
+            self.set({black: common.parseBlack(black)});
         });
     });
+};
+
+G.getDealerPlayer = function () {
+    var dealerId = this.dealer;
+    return _.find(this.players, function (p) { return p.id == dealerId; });
 };
 
 G.oninactive = function (event, from, to) {
@@ -170,19 +208,39 @@ G.sendAll = function (type, msg) {
     });
 };
 
+G.gameStateChanged = function () {
+    if (!this.deferredBroadcast)
+        this.deferredBroadcast = _.defer(this.broadcastState.bind(this));
+};
+
+G.broadcastState = function () {
+    this.deferredBroadcast = 0;
+
+    var send = this.sendState.bind(this);
+    this.players.forEach(send);
+    this.specs.forEach(send);
+};
+
 G.sendState = function (dest) {
     var self = this;
+    var player = dest.isPlaying();
+    var dealer = player && dest.id == this.dealer;
     var info = {unlocked: false};
 
     switch (this.current) {
         case 'inactive':
-            info.status = 'Waiting for players...';
+            info.status = 'Need more players.';
             break;
         case 'nominating':
-            info.unlocked = true;
+            if (!player)
+                info.status = 'Waiting for submissions...';
+            else if (dealer)
+                info.status = 'You are the dealer. Waiting for submissions...';
+            else
+                info.unlocked = true;
             break;
         case 'electing':
-            info.status = 'Waiting for choice...';
+            info.status = dealer ? 'Pick your favorite.' : 'Dealer is picking their favorite...';
             info.submissions = this.anonymizedSubmissions();
             break;
         default:
@@ -195,18 +253,25 @@ G.sendState = function (dest) {
 
     dest.send('set', info);
     if (this.black)
-        dest.send('black', {black: this.black});
+        dest.send('black', {black: this.black.card});
+};
+
+G.saveState = function () {
+    // todo
 };
 
 G.onbeforenominate = function () {
-    return this.players.every(function (p) { return p.selection; });
+    var dealer = this.getDealerPlayer();
+    return this.players.every(function (p) { return p == dealer || p.selection; });
 };
 
 G.onelecting = function () {
     var submissions = [], submissionIds = {};
-    var blankCount = this.blackInfo.blankCount;
+    var blankCount = this.black.blankCount;
     var self = this;
     function checkSubmission(player, cb) {
+        if (player.id == self.dealer)
+            return cb(null);
         player.checkSubmission(blankCount, function (err, submission) {
             if (err)
                 return cb(err);
@@ -239,9 +304,7 @@ G.onelecting = function () {
             self.players.forEach(function (player) {
                 player.confirmSubmission(submissionIds);
             });
-            self.submissions = submissions;
-            self.sendAll('set', {status: 'Waiting for choice...',
-                    submissions: self.anonymizedSubmissions()});
+            self.set({submissions: submissions});
         });
     });
 };
@@ -313,10 +376,8 @@ P.adopt = function (client) {
     client.on('change:name', this.onChangeNameCb);
     client.once('disconnected', this.abandon.bind(this));
 
-    if (this.game) {
-        if (client.state != 'spec')
-            this.sendHand();
-    }
+    if (this.isPlaying())
+        this.sendHand();
     else
         this.send('set', {canJoin: true});
     return true;
@@ -342,6 +403,10 @@ P.toJSON = function () {
     var json = this.client ? this.client.toJSON() : {name: '<dropped>'};
     json.kind = 'player';
     return json;
+};
+
+P.isPlaying = function () {
+    return !!this.game;
 };
 
 P.dealInitialHand = function () {
@@ -434,6 +499,8 @@ P.handle_select = function (msg) {
 };
 
 P.checkSubmission = function (count, cb) {
+    if (!this.selection)
+        return cb(null, false);
     if (this.selection.length != count) {
         this.warn("Wrong number of selections!");
         return cb(null, false);
