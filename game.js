@@ -350,8 +350,14 @@ G.gotElection = function (player, choice) {
             var player = PLAYERS[winner];
             if (player)
                 player.set({score: gameScore});
-            self.nextDealer();
-            self.elect();
+
+            var name = (player && (player.name || 'Anonymous')) || '<gone>';
+            self.sendAll('set', {status: name + ' won!', action: null});
+            self.sendAll('elect', {cards: choice});
+            setTimeout(function () {
+                self.nextDealer();
+                self.elect();
+            }, 3000);
         });
     });
 };

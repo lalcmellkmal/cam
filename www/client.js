@@ -201,6 +201,7 @@ var GameView = Backbone.View.extend({
 		var fadeIns = [];
 		_.each(subs, function (sub) {
 			var $a = self.renderSubmission(black, sub);
+			sub.el = $a[0];
 			$a.css({opacity: 0}).appendTo($subs);
 			fadeIns.push($a);
 		});
@@ -337,6 +338,19 @@ var dispatch = {
 		});
 		if (final)
 			hand.remove(targets);
+	},
+
+	elect: function () {
+		var winner = this.cards;
+		_.each(game.get('submissions'), function (sub) {
+			console.log('submission', sub);
+			if (!sub.el)
+				return;
+			if (_.isEqual(sub.cards, winner))
+				$(sub.el).addClass('winner');
+			else
+				$(sub.el).animate({opacity: 0});
+		});
 	},
 };
 

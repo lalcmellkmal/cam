@@ -103,7 +103,11 @@ ul {
 	padding: 0.4em 1em;
 	margin-bottom: 1px;
 }
-#submissions b {
+#submissions a.winner, #submissions a.winner b {
+	background-color: #55f;
+	color: white;
+}
+#submissions a b {
 	color: #55f;
 }
 #submissions.electing a {
