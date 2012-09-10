@@ -38,7 +38,10 @@ function onConnection(conn) {
 }
 
 function sockJsLog(sev, msg) {
-    console.log(msg);
+    if (sev != 'debug' && sev != 'info')
+        console.error(msg);
+    else if (config.DEBUG)
+        console.log(msg);
 }
 
 function Client(sock) {
@@ -65,6 +68,8 @@ C.onMessage = function (data) {
         this.drop('Bad JSON.');
         return;
     }
+    if (config.DEBUG)
+        console.log('< ' + data);
     if (!msg || typeof msg != 'object' || !msg.a)
         return this.drop('No type.');
     var handler, context;
@@ -96,7 +101,8 @@ C.send = function (type, msg) {
 
 C.sendRaw = function (flat) {
     this.buffer.push(flat);
-    //console.log('> ' + flat);
+    if (config.DEBUG)
+        console.log('> ' + flat);
     if (!this.flushTimer)
         this.flushTimer = setTimeout(this.flush.bind(this), 0);
 };
