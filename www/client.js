@@ -61,6 +61,7 @@ var HandView = Backbone.View.extend({
 
 	initialize: function () {
 		this.model.on('reset', this.reset, this);
+		this.model.on('add', this.addCard, this);
 	},
 
 	reset: function (model) {
@@ -70,7 +71,9 @@ var HandView = Backbone.View.extend({
 
 	addCard: function (card) {
 		var view = new CardView({model: card});
-		this.$el.append(view.render().el);
+		var $card = view.render().$el;
+		$card.css({opacity: 0}).animate({opacity: 1});
+		this.$el.append($card);
 	},
 });
 
@@ -317,7 +320,11 @@ var dispatch = {
 	},
 
 	hand: function () {
-		hand.reset(this.hand);
+		hand.reset(this.cards);
+	},
+
+	draw: function () {
+		hand.add(this.cards);
 	},
 
 	select: function () {

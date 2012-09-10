@@ -482,16 +482,16 @@ P.isPlaying = function () {
 P.dealHand = function (fresh) {
     var key = this.key + ':hand';
     var self = this;
-    this.r.smembers(key, function (err, oldCards) {
+    this.r.scard(key, function (err, oldCardCount) {
         if (err)
             return self.drop(err);
         if (fresh)
-            oldCards = [];
-        if (oldCards.length >= HAND_SIZE)
+            oldCardCount = 0;
+        if (oldCardCount >= HAND_SIZE)
             return;
 
         var m = self.r.multi();
-        for (var i = oldCards.length; i < HAND_SIZE; i++)
+        for (var i = oldCardCount; i < HAND_SIZE; i++)
             m.spop('cam:whites');
         m.exec(function (err, rs) {
             if (err)
@@ -511,8 +511,8 @@ P.dealHand = function (fresh) {
                     self.warn("Lost " + newCards.length + " card(s).");
                     return self.drop(err);
                 }
-                var hand = oldCards.concat(newCards);
-                self.send('hand', {hand: cardsFromNames(hand)});
+                var cards = cardsFromNames(newCards);
+                self.send(fresh ? 'hand' : 'draw', {cards: cards});
             });
         });
     });
@@ -523,7 +523,7 @@ P.sendHand = function (cb) {
     this.r.smembers(this.key + ':hand', function (err, hand) {
         if (err)
             return cb(err);
-        self.send('hand', {hand: cardsFromNames(hand)});
+        self.send('hand', {cards: cardsFromNames(hand)});
         cb(null);
     });
 };
