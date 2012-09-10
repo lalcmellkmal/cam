@@ -53,7 +53,7 @@ util.inherits(Client, events.EventEmitter);
 var C = Client.prototype;
 
 C.toJSON = function () {
-    return {name: this.name || '<anon>', kind: 'spec'};
+    return {name: this.name || 'Anonymous', kind: 'spec'};
 };
 
 C.onMessage = function (data) {
@@ -190,22 +190,22 @@ C.handle_setName = function (msg) {
         return this.warn('Not logged in!');
     if (typeof msg.name != 'string')
         return this.drop('No name!');
-    var name = msg.name.replace(/[^\w .?\/<>'|\\\-+=!#$&*]+/g, '');
-    name = name.replace(/\s+/g, ' ').trim();
-    if (!name)
+    var name = msg.name.replace(/[^\w .?\/<>'|\\\-+=!#$&*`~]+/g, '');
+    name = name.replace(/\s+/g, ' ').trim().slice(0, 30);
+    if (!name || name.toLowerCase() == 'dealer')
         return this.drop('Bad name.');
     var oldName = this.name;
     if (name == oldName)
         return;
     var self = this;
-    this.r.hsetnx('cam:userNames', name, this.id, function (err, success) {
+    this.r.hsetnx('cam:userNames', name.toLowerCase(), this.id, function (err, success) {
         if (err)
             return self.drop(err);
         if (!success)
             return self.warn("Name is already taken.");
         var m = self.r.multi();
         if (oldName)
-            m.hdel('cam:userNames', oldName);
+            m.hdel('cam:userNames', oldName.toLowerCase());
         m.hset(self.key, 'name', name).exec(function (err) {
             if (err) {
                 self.warn("Lost username " + name + "!");
@@ -213,7 +213,10 @@ C.handle_setName = function (msg) {
             }
             self.name = name;
             self.emit('change:name', name);
-            self.send('set', {t: 'account', name: name, status: 'Your name is now "' + name + '".'});
+            if (self.player)
+                self.player.set({name: name});
+            self.send('set', {t: 'account', name: name});
+            self.send('set', {status: 'Your name is now "' + name + '".'});
         });
     });
 };

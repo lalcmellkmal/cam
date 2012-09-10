@@ -151,10 +151,13 @@ var GameView = Backbone.View.extend({
 		var roster = this.model.get('roster');
 		var $list = this.$('#roster').empty();
 		_.each(roster, function (player) {
-			$list.append($('<a/>', {
+			var $a = $('<a/>', {
 				text: player.name,
 				class: player.kind,
-			}), '<br>');
+			});
+			if (player.kind == 'dealer')
+				$a.prepend('<b>Dealer:</b> ');
+			$list.append($a, '<br>');
 		});
 	},
 

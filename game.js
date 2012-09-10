@@ -74,7 +74,6 @@ G.removeSpec = function (client) {
     this.specs.splice(i, 1);
     this.setChanged('specs');
     client.removeListener('change:name', this.broadcastRosterCb);
-    client.removeAllListeners('disconnected');
 };
 
 G.addPlayer = function (player) {
@@ -313,8 +312,6 @@ G.anonymizedSubmissions = function () {
 function Player(id) {
     Model.call(this);
     this.id = id;
-
-    this.onChangeNameCb = this.onChangeName.bind(this);
 }
 util.inherits(Player, Model);
 exports.Player = Player;
@@ -366,23 +363,23 @@ P.adopt = function (client) {
     this.client = client;
     this.key = client.key;
     this.r = client.r;
-    client.on('change:name', this.onChangeNameCb);
+    this.set({name: client.name});
     client.once('disconnected', this.abandon.bind(this));
 
-    if (this.isPlaying())
+    if (this.isPlaying()) {
+        this.game.sendState(this);
         this.sendHand();
+    }
     else
         this.send('set', {canJoin: true});
     return true;
 };
 
 P.abandon = function () {
-    var client = this.client;
-    console.log('PLAYER ' + client.name + ' dropped.');
-    client.removeListener('change:name', this.onChangeNameCb);
-    client.removeAllListeners('disconnected');
-    client.player = null;
+    var name = this.client.name;
+    this.client.player = null;
     this.client = null;
+    this.set({name: name ? name + ' (dropped)' : '(dropped)'});
     this.timeout = setTimeout(this.die.bind(this), TIMEOUT);
 };
 
@@ -393,7 +390,7 @@ P.die = function () {
 };
 
 P.toJSON = function () {
-    var json = this.client ? this.client.toJSON() : {name: '<dropped>'};
+    var json = this.client ? this.client.toJSON() : {name: this.name};
     json.kind = 'player';
     return json;
 };
@@ -524,10 +521,6 @@ P.confirmSubmission = function (mapping) {
     else
         this.send('set', {status: 'Invalid submission!'});
     this.send('set', {unlocked: false});
-};
-
-P.onChangeName = function () {
-    this.emit('change:name');
 };
 
 function loadDeck(filename, dest, cb) {
