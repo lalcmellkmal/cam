@@ -604,6 +604,7 @@ P.confirmSubmission = function (mapping) {
     else
         this.send('set', {status: 'Invalid submission!'});
     this.send('set', {unlocked: false});
+    this.selection = null;
 };
 
 P.handle_elect = function (msg) {
