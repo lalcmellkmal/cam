@@ -1,7 +1,9 @@
-var config = require('./config'),
+var assets = require('./assets'),
+    config = require('./config'),
     connect = require('connect'),
     game = require('./game'),
     events = require('events'),
+    urlParse = require('url').parse,
     util = require('util');
 
 function redisClient() {
@@ -13,7 +15,8 @@ game.setRedis(SHARED_REDIS);
 
 function startServer() {                                                       
     var app = connect.createServer();
-    app.use(connect.static(__dirname + '/www'));
+    app.use(serveScripts);
+    app.use(connect.static(__dirname + '/www', {maxAge: 2592000000}));
     app.on('upgrade', function (req, resp) {
         resp.end();
     });
@@ -251,9 +254,33 @@ C.onDisconnected = function () {
     this.removeAllListeners();
 };
 
+var SCRIPTS;
+
+function serveScripts(req, resp, next) {
+    var url = urlParse(req.url, true);
+    if (url.pathname == '/') {
+        resp.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8',
+                Expires: 'Thu, 01 Jan 1970 00:00:00 GMT',
+                'Cache-Control': 'no-cache'});
+        resp.end(SCRIPTS.indexHtml);
+        return;
+    }
+    else if (url.pathname == SCRIPTS.clientJsPath) {
+        resp.writeHead(200, {'Content-Type': 'application/javascript',
+                'Cache-Control': 'max-age=600000'});
+        resp.end(SCRIPTS.clientJs);
+        return;
+    }
+    next();
+}
+
 if (require.main === module) {
-    game.setupRound(function (err) {
+    assets.buildScripts(function (err, scripts) {
         if (err) throw err;
-        startServer();
+        SCRIPTS = scripts;
+        game.setupRound(function (err) {
+            if (err) throw err;
+            startServer();
+        });
     });
 }
