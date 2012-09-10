@@ -217,7 +217,7 @@ G.sendState = function (dest) {
     var self = this;
     var player = dest.isPlaying();
     var dealer = player && dest.id == this.dealer;
-    var info = {unlocked: false};
+    var info = {unlocked: false, black: this.black ? this.black.card : null};
 
     switch (this.current) {
         case 'inactive':
@@ -228,8 +228,12 @@ G.sendState = function (dest) {
                 info.status = 'Waiting for submissions...';
             else if (dealer)
                 info.status = 'You are the dealer. Waiting for submissions...';
-            else
+            else {
                 info.unlocked = true;
+                var n = this.black.blankCount;
+                var word = {1: 'one', 2: 'two', 3: 'three'}[n];
+                info.status = 'Pick ' + (word || n) + '.';
+            }
             break;
         case 'electing':
             info.status = dealer ? 'Pick your favorite.' : 'Dealer is picking their favorite...';
@@ -239,11 +243,6 @@ G.sendState = function (dest) {
             console.warn("Unknown state to send: " + this.current);
             info.status = "Unknown state.";
     }
-
-    if (this.black)
-        dest.send('black', {black: this.black.card});
-    else
-        info.black = null;
 
     dest.send('set', info);
 };

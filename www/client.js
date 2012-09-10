@@ -86,7 +86,7 @@ var Game = Backbone.Model.extend({
 	selectionChanged: function (card, newState) {
 		if (newState != 'selecting')
 			return;
-		var black = this.get('black');
+		var black = this.get('blackInfo');
 		var n = black.blankCount;
 		if (n < 2)
 			return send('select', {cards: [card.id]});
@@ -130,7 +130,7 @@ var GameView = Backbone.View.extend({
 		this.model.on('change:roster', this.renderRoster, this);
 		this.model.on('change:black', this.renderBlack, this);
 		this.model.on('change:unlocked', this.renderHandLock, this);
-		this.model.on('change:submissions', this.renderSubmissions, this);
+		this.model.on('change:submissions change:blackInfo', this.renderSubmissions, this);
 	},
 
 	joinGame: function () {
@@ -162,24 +162,28 @@ var GameView = Backbone.View.extend({
 
 	renderBlack: function (model, black) {
 		var $black = this.$('.black:first');
-		if (!black) {
-			$black.hide();
-			return;
+		if (black) {
+			var info = parseBlack(black);
+			$black.find('a').text(info.text);
+			this.model.set({blackInfo: info});
 		}
-		$black.find('a').text(black.text);
-		$black.show();
+		else {
+			this.model.set({blackInfo: null});
+		}
+		$black.toggle(!!black);
 	},
 
 	renderHandLock: function (model, unlocked) {
 		this.$('#myHand').toggleClass('unlocked', unlocked);
 	},
 
-	renderSubmissions: function (model, subs) {
+	renderSubmissions: function () {
 		var $subs = this.$('#submissions');
-		if (!subs || !subs.length)
+		var subs = this.model.get('submissions');
+		var black = this.model.get('blackInfo');
+		if (!subs || !subs.length || !black)
 			return $subs.hide();
 		$subs.empty();
-		var black = this.model.get('black');
 		var self = this;
 		_.each(subs, function (sub) {
 			$subs.append(self.renderSubmission(applySubmission(black, sub)));
@@ -286,17 +290,6 @@ var dispatch = {
 			delete this.t;
 		}
 		window[target].set(this);
-	},
-
-	black: function () {
-		var black = parseBlack(this.black);
-		var write = {black: black};
-		if (game.get('unlocked')) {
-			var n = black.blankCount;
-			var word = {1: 'one', 2: 'two', 3: 'three'}[n];
-			write.status = 'Pick ' + (word || n) + '.';
-		}
-		game.set(write);
 	},
 
 	hand: function () {
