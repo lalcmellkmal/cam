@@ -89,6 +89,7 @@ G.addPlayer = function (player) {
         this.dealer = player.id;
 
     player.on('change:name', this.broadcastRosterCb);
+    player.on('change:score', this.broadcastRosterCb);
     player.once('dropped', this.dropPlayer.bind(this, player));
 
     if (player.client)
@@ -118,6 +119,7 @@ G.dropPlayer = function (player) {
 
     player.set({game: null});
     player.removeListener('change:name', this.broadcastRosterCb);
+    player.removeListener('change:score', this.broadcastRosterCb);
     player.removeAllListeners('dropped');
 
     if (this.players.length < MIN_PLAYERS)
@@ -217,7 +219,8 @@ G.sendState = function (dest) {
     var self = this;
     var player = dest.isPlaying();
     var dealer = player && dest.id == this.dealer;
-    var info = {unlocked: false, black: this.black ? this.black.card : null};
+    var info = {unlocked: false, elect: false, submissions: null};
+    info.black = this.black ? this.black.card : null;
 
     switch (this.current) {
         case 'inactive':
@@ -236,7 +239,12 @@ G.sendState = function (dest) {
             }
             break;
         case 'electing':
-            info.status = dealer ? 'Pick your favorite.' : 'Dealer is picking their favorite...';
+            if (dealer) {
+                info.status = 'Pick your favorite.';
+                info.elect = true;
+            }
+            else
+                info.status = 'Dealer is picking their favorite...';
             info.submissions = this.anonymizedSubmissions();
             break;
         default:
@@ -306,11 +314,50 @@ G.anonymizedSubmissions = function () {
     });
 };
 
+G.gotElection = function (player, choice) {
+    if (this.current != 'electing')
+        return player.warn("Not picking right now.");
+    if (player.id != this.dealer)
+        return player.warn("You are not the dealer.");
+
+    var winner;
+    for (var i = 0; i < this.submissions.length; i++) {
+        var sub = this.submissions[i];
+        if (_.isEqual(sub.cards, choice)) {
+            winner = sub.id;
+            break;
+        }
+    }
+    if (!winner)
+        return player.warn("Invalid choice.");
+
+    var m = this.r.multi();
+    m.hincrby(this.key, 'scores', 1);
+    m.hincrby('cam:user:' + winner, 'score', 1);
+    var self = this;
+    m.exec(function (err, rs) {
+        if (err)
+            return self.fail(err);
+        var gameScore = rs[0], totalScore = rs[1];
+        var m = self.r.multi();
+        m.zadd('cam:leaderboard', totalScore, winner);
+        m.exec(function (err) {
+            if (err)
+                return self.fail(err);
+            var player = PLAYERS[winner];
+            if (player)
+                player.set({score: gameScore});
+            self.elect();
+        });
+    });
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 
 function Player(id) {
     Model.call(this);
     this.id = id;
+    this.score = 0;
 }
 util.inherits(Player, Model);
 exports.Player = Player;
@@ -391,6 +438,7 @@ P.die = function () {
 P.toJSON = function () {
     var json = this.client ? this.client.toJSON() : {name: this.name};
     json.kind = 'player';
+    json.score = this.score;
     return json;
 };
 
@@ -454,7 +502,7 @@ function cardsFromNames(hand) {
     return hand.map(function (name) { return {id: name}; });
 }
 
-P.handle_select = function (msg) {
+P.handle_submit = function (msg) {
     var cards = msg.cards;
 
     if (!this.game)
@@ -520,6 +568,16 @@ P.confirmSubmission = function (mapping) {
     else
         this.send('set', {status: 'Invalid submission!'});
     this.send('set', {unlocked: false});
+};
+
+P.handle_elect = function (msg) {
+    if (!msg || typeof msg != 'object')
+        return this.drop('Bad selection!');
+    var cards = msg.cards;
+    if (!_.isArray(cards) || !cards.length)
+        return this.drop('Bad selection!');
+    if (this.game)
+        this.game.gotElection(this, cards);
 };
 
 function loadDeck(filename, dest, cb) {

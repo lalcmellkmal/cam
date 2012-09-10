@@ -15,7 +15,7 @@ var Cards = Backbone.Collection.extend({
 			if (card !== opts.except)
 				card.set({index: 0, state: 'normal'});
 		});
-		send('select', {});
+		send('submit', {});
 	},
 });
 
@@ -89,7 +89,7 @@ var Game = Backbone.Model.extend({
 		var black = this.get('blackInfo');
 		var n = black.blankCount;
 		if (n < 2)
-			return send('select', {cards: [card.id]});
+			return send('submit', {cards: [card.id]});
 		// Figure out the next index
 		var indices = _.filter(hand.pluck('index'), function (x) { return x; });
 		indices.push(0);
@@ -105,7 +105,7 @@ var Game = Backbone.Model.extend({
 			choices.sort(function (a, b) {
 				return a.get('index') - b.get('index');
 			});
-			send('select', {cards: _.pluck(choices, 'id')});
+			send('submit', {cards: _.pluck(choices, 'id')});
 		}
 	},
 });
@@ -113,6 +113,7 @@ var Game = Backbone.Model.extend({
 var GameView = Backbone.View.extend({
 	events: {
 		'click #join': 'joinGame',
+		'click .electing a': 'elect',
 	},
 
 	initialize: function () {
@@ -129,13 +130,19 @@ var GameView = Backbone.View.extend({
 		this.model.on('change:canJoin', this.renderCanJoin, this);
 		this.model.on('change:roster', this.renderRoster, this);
 		this.model.on('change:black', this.renderBlack, this);
-		this.model.on('change:unlocked', this.renderHandLock, this);
+		this.model.on('change:unlocked change:elect', this.renderLocks, this);
 		this.model.on('change:submissions change:blackInfo', this.renderSubmissions, this);
 	},
 
 	joinGame: function () {
 		send('join', {});
 		this.model.set({canJoin: false});
+	},
+
+	elect: function (event) {
+		var cards = $(event.currentTarget).data('cards');
+		if (cards)
+			send('elect', {cards: cards});
 	},
 
 	renderStatus: function () {
@@ -156,6 +163,8 @@ var GameView = Backbone.View.extend({
 			});
 			if (player.kind == 'dealer')
 				$a.prepend('<b>Dealer:</b> ');
+			if (player.score)
+				$a.append(' ', $('<em/>', {text: '('+player.score+')'}));
 			$list.append($a, '<br>');
 		});
 	},
@@ -173,8 +182,10 @@ var GameView = Backbone.View.extend({
 		$black.toggle(!!black);
 	},
 
-	renderHandLock: function (model, unlocked) {
-		this.$('#myHand').toggleClass('unlocked', unlocked);
+	renderLocks: function () {
+		var attrs = this.model.attributes;
+		this.$('#myHand').toggle(!attrs.elect).toggleClass('unlocked', attrs.unlocked);
+		this.$('#submissions').toggleClass('electing', attrs.elect);
 	},
 
 	renderSubmissions: function () {
@@ -186,18 +197,18 @@ var GameView = Backbone.View.extend({
 		$subs.empty();
 		var self = this;
 		_.each(subs, function (sub) {
-			$subs.append(self.renderSubmission(applySubmission(black, sub)));
+			$subs.append(self.renderSubmission(black, sub));
 		});
 		$subs.show();
 	},
 
-	renderSubmission: function (bits) {
-		var $a = $('<a/>');
-		_.each(bits, function (bit) {
+	renderSubmission: function (black, sub) {
+		var $a = $('<a/>', {data: {cards: sub.cards}});
+		_.each(applySubmission(black, sub), function (bit) {
 			if (bit.white)
 				$a.append($('<b/>', {text: bit.white}));
 			else
-				$a.append(bit);
+				$a.append(document.createTextNode(bit));
 		});
 		return $a;
 	},
