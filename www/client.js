@@ -117,13 +117,13 @@ var GameView = Backbone.View.extend({
 
 	initialize: function () {
 		var handView = new HandView({model: hand, id: 'myHand'});
-		var submissions = new HandView({model: this.model, id: 'submissions'});
-		var accountView = new AccountView({model: account});
+		var $roster = $('<p/>', {id: 'roster'});
+		var $submissions = $('<div/>', {id: 'submissions'});
 
 		var black = $('<li class="black"><a/></li>').hide();
 		var joinButton = $('<input type=button id=join value=Join>').hide();
-		this.$el.prepend(black, accountView.render().el, ' <p id="roster"></p> '
-			).append(joinButton, submissions.el, handView.el);
+		this.$el.prepend(black, $roster, $submissions
+			).append(joinButton, handView.el);
 
 		this.model.on('change:status change:error', this.renderStatus, this);
 		this.model.on('change:canJoin', this.renderCanJoin, this);
@@ -174,13 +174,28 @@ var GameView = Backbone.View.extend({
 		this.$('#myHand').toggleClass('unlocked', unlocked);
 	},
 
-	// share with handview?
 	renderSubmissions: function (model, subs) {
 		var $subs = this.$('#submissions');
 		if (!subs || !subs.length)
 			return $subs.hide();
-		// should animate
 		$subs.empty();
+		var black = this.model.get('black');
+		var self = this;
+		_.each(subs, function (sub) {
+			$subs.append(self.renderSubmission(applySubmission(black, sub)));
+		});
+		$subs.show();
+	},
+
+	renderSubmission: function (bits) {
+		var $a = $('<a/>');
+		_.each(bits, function (bit) {
+			if (bit.white)
+				$a.append($('<b/>', {text: bit.white}));
+			else
+				$a.append(bit);
+		});
+		return $a;
 	},
 });
 
@@ -188,13 +203,15 @@ var Account = Backbone.Model.extend({
 });
 
 var AccountView = Backbone.View.extend({
+	id: 'account',
+
 	events: {
 		submit: 'changeName',
 	},
 
 	initialize: function () {
 		this.model.on('change', this.render, this);
-		this.$el.append('<form id=account><input id=username> <input type=submit value="Set name"></form>');
+		this.$el.append('<form><input id=username> <input type=submit value="Set name"></form>');
 	},
 
 	render: function () {
@@ -220,7 +237,10 @@ window.hand = hand;
 window.game = game;
 
 $(function () {
-	var gameView = new GameView({model: game, el: $('#game')[0]});
+	var $game = $('#game');
+	var accountView = new AccountView({model: account});
+	accountView.render().$el.insertBefore($game);
+	var gameView = new GameView({model: game, el: $game[0]});
 });
 
 function send(type, msg) {

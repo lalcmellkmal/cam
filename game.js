@@ -7,7 +7,7 @@ var _ = require('underscore'),
     util = require('util');
 
 var HAND_SIZE = 7;
-var MIN_PLAYERS = 1;
+var MIN_PLAYERS = 2;
 
 var GAMES = {};
 var PLAYERS = {};
@@ -240,12 +240,12 @@ G.sendState = function (dest) {
             info.status = "Unknown state.";
     }
 
-    if (!this.black)
+    if (this.black)
+        dest.send('black', {black: this.black.card});
+    else
         info.black = null;
 
     dest.send('set', info);
-    if (this.black)
-        dest.send('black', {black: this.black.card});
 };
 
 G.saveState = function () {
