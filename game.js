@@ -86,7 +86,7 @@ G.addPlayer = function (player) {
     this.setChanged('players');
 
     if (!this.dealer)
-        this.dealer = player.id;
+        this.nextDealer();
 
     player.on('change:name', this.broadcastRosterCb);
     player.on('change:score', this.broadcastRosterCb);
@@ -349,9 +349,29 @@ G.gotElection = function (player, choice) {
             var player = PLAYERS[winner];
             if (player)
                 player.set({score: gameScore});
+            self.nextDealer();
             self.elect();
         });
     });
+};
+
+G.nextDealer = function () {
+    if (!this.players.length) {
+        this.set({dealer: null});
+        return;
+    }
+    if (!this.dealer) {
+        this.set({dealer: this.players[0].id});
+        return;
+    }
+    for (var i = 0; i < this.players.length; i++) {
+        if (this.players[i].id == this.dealer) {
+            var next = this.players[i+1] || this.players[0];
+            this.set({dealer: next.id});
+            return;
+        }
+    }
+    this.set({dealer: this.players[0].id});
 };
 
 ///////////////////////////////////////////////////////////////////////////////
