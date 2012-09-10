@@ -12,6 +12,8 @@ var MIN_PLAYERS = 2;
 var GAMES = {};
 var PLAYERS = {};
 
+var DECK_FILES = fs.readdirSync('sets');
+
 var SHARED_REDIS;
 exports.setRedis = function (r) { SHARED_REDIS = r; };
 
@@ -646,10 +648,8 @@ function loadDeck(filename, dest, cb) {
 
 function setupRound(cb) {
 
-    // TEMP: Wouldn't be reading this every time.
-    var sets = fs.readdirSync('sets');
     var whiteSets = [], blackSets = [];
-    sets.forEach(function (set) {
+    DECK_FILES.forEach(function (set) {
         if (set.match(/black/i))
             blackSets.push(set);
         else
