@@ -1,4 +1,4 @@
-//(function () {
+(function () {
 
 var Card = Backbone.Model.extend({
 	defaults: {
@@ -259,13 +259,9 @@ var AccountView = Backbone.View.extend({
 	},
 });
 
-var account = new Account;
-var hand = new Cards;
-var game = new Game;
-
-window.account = account;
-window.hand = hand;
-window.game = game;
+window.account = new Account;
+window.hand = new Cards;
+window.game = new Game;
 
 $(function () {
 	var $game = $('#game');
@@ -365,4 +361,4 @@ function randomId() {
         return '' + (Math.floor(Math.random() * 1e16) + 1);
 }
 
-//})();
+})();
