@@ -281,7 +281,7 @@ function send(type, msg) {
 	sock.send(msg);
 }
 
-window.sock = new SockJS('http://localhost:8000/sockjs');
+window.sock = new SockJS('sockjs');
 sock.onopen = function () {
 	var id = localStorage.getItem('camId');
 	if (!id) {
