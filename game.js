@@ -81,7 +81,7 @@ G.addPlayer = function (player) {
         return this.warn('Already playing.');
 
     player.game = this;
-    player.dealInitialHand();
+    player.dealHand(true);
     this.players.push(player);
     this.setChanged('players');
 
@@ -302,6 +302,8 @@ G.onelecting = function () {
 
             self.players.forEach(function (player) {
                 player.confirmSubmission(submissionIds);
+                // delay for the animation
+                setTimeout(player.dealHand.bind(player, false), 2000);
             });
             self.set({submissions: submissions});
         });
@@ -446,27 +448,41 @@ P.isPlaying = function () {
     return !!this.game;
 };
 
-P.dealInitialHand = function () {
-    var m = this.r.multi();
-    for (var i = 0; i < HAND_SIZE; i++)
-        m.spop('cam:whites');
+P.dealHand = function (fresh) {
+    var key = this.key + ':hand';
     var self = this;
-    m.exec(function (err, rs) {
+    this.r.smembers(key, function (err, oldCards) {
         if (err)
             return self.drop(err);
-        var hand = rs.filter(function (card) { return card; });
-        var key = self.key + ':hand';
+        if (fresh)
+            oldCards = [];
+        if (oldCards.length >= HAND_SIZE)
+            return;
+
         var m = self.r.multi();
-        m.del(key);
-        if (hand.length)
-            m.sadd(key, hand);
-        m.exec(function (err) {
-            if (err) {
-                // redis probably failed, not much point trying to recover
-                self.warn("Lost " + hand.length + " card(s).");
+        for (var i = oldCards.length; i < HAND_SIZE; i++)
+            m.spop('cam:whites');
+        m.exec(function (err, rs) {
+            if (err)
                 return self.drop(err);
-            }
-            self.send('hand', {hand: cardsFromNames(hand)});
+            var newCards = _.compact(rs);
+            if (!fresh && !newCards.length)
+                return;
+
+            var m = self.r.multi();
+            if (fresh)
+                m.del(key);
+            if (newCards.length)
+                m.sadd(key, newCards);
+            m.exec(function (err) {
+                if (err) {
+                    // redis probably failed, not much point trying to recover
+                    self.warn("Lost " + newCards.length + " card(s).");
+                    return self.drop(err);
+                }
+                var hand = oldCards.concat(newCards);
+                self.send('hand', {hand: cardsFromNames(hand)});
+            });
         });
     });
 };
