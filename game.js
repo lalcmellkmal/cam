@@ -586,18 +586,9 @@ P.handle_submit = function (msg) {
     if (_.uniq(cards).length != cards.length)
         return this.warn("Duplicate choices!");
 
-    // TEMP
-    var self = this;
-    setTimeout(function () {
-    if (!self.game)
-        return;
-
-    self.selection = msg.cards;
-    self.remindSubmission();
-    self.game.nominate();
-
-    // TEMP
-    }, 500);
+    this.selection = msg.cards;
+    this.remindSubmission();
+    this.game.nominate();
 };
 
 P.remindSubmission = function () {
