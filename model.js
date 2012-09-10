@@ -5,6 +5,7 @@ function Model() {
     events.EventEmitter.call(this);
     this._changed = {};
     this._changeTimeout = 0;
+    this._defers = {};
 }
 util.inherits(Model, events.EventEmitter);
 exports.Model = Model;
@@ -21,23 +22,29 @@ M.set = function (hash) {
 
 M.setChanged = function (key) {
     this._changed[key] = true;
-    if (!this._changeTimeout)
-        this._changeTimeout = setTimeout(this._deferredChange.bind(this), 0);
-};
-
-M._deferredChange = function () {
-    this._changeTimeout = 0;
-    this.change();
+    this.defer('change');
 };
 
 M.change = function () {
-    if (this._changeTimeout) {
-        clearTimeout(this._changeTimeout);
-        this._changeTimeout = 0;
-    }
     for (var k in this._changed) {
         if (this._changed[k])
             this.emit('change:' + k);
     }
     this._changed = {};
+};
+
+M.defer = function (name) {
+    if (!this._defers[name])
+        this._defers[name] = setTimeout(this.flush.bind(this, name), 0);
+};
+
+M.deferral = function (name) {
+    return this.defer.bind(this, name);
+};
+
+M.flush = function (name) {
+    if (this._defers[name]) {
+        this._defers[name] = 0;
+        this[name].call(this);
+    }
 };

@@ -25,11 +25,11 @@ function Game() {
     this.players = [];
     this.specs = [];
 
-    this.broadcastRosterCb = this.broadcastRoster.bind(this);
+    this.broadcastRosterCb = this.deferral('broadcastRoster');
     this.on('change:players', this.broadcastRosterCb);
     this.on('change:specs', this.broadcastRosterCb);
 
-    var changed = this.gameStateChanged.bind(this);
+    var changed = this.deferral('broadcastState');
     this.on('change:black', changed);
     this.on('change:dealer', changed);
     this.on('change:submissions', changed);
@@ -208,14 +208,7 @@ G.sendAll = function (type, msg) {
     });
 };
 
-G.gameStateChanged = function () {
-    if (!this.deferredBroadcast)
-        this.deferredBroadcast = _.defer(this.broadcastState.bind(this));
-};
-
 G.broadcastState = function () {
-    this.deferredBroadcast = 0;
-
     var send = this.sendState.bind(this);
     this.players.forEach(send);
     this.specs.forEach(send);
