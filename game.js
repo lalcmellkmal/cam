@@ -396,7 +396,7 @@ G.gotElection = function (player, choice) {
                 player.set({score: gameScore});
 
             var name = (player && player.name) || '<gone>';
-            var phrase = common.applySubmission(self.black, winner);
+            var phrase = common.applySubmission(self.black, winner, false);
             phrase.unshift(name + ' won with phrase: ');
             self.logMeta(phrase);
             self.sendAll('set', {status: name + ' won!', action: null});

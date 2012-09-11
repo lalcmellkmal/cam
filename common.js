@@ -22,8 +22,6 @@ exports.parseBlack = function (black) {
         if (after)
             blank.omitPeriod = true;
         tokens[i] = blank;
-        if (before.length >= 60)
-            tokens[i-1] = (i > 1) ? ' [...] ' : '[...] ';
     }
     info.tokens = tokens;
 
@@ -35,10 +33,15 @@ exports.parseBlack = function (black) {
     return info;
 };
 
-exports.applySubmission = function (black, sub) {
+var ABBREV = 60;
+
+exports.applySubmission = function (black, sub, abbrev) {
     var bits = [];
-    if (!black.skipQuestion)
-        bits.push(black.tokens[0]);
+    var first = black.tokens[0];
+    if (!abbrev)
+        bits.push(first + (black.skipQuestion ? ' ' : ''));
+    else if (!black.skipQuestion)
+        bits.push(first.length > ABBREV ? '[...] ' : first);
 
     var whites = sub.cards;
     for (var i = 0; i < whites.length; i++) {
@@ -59,9 +62,9 @@ exports.applySubmission = function (black, sub) {
 
         bits.push({white: white});
 
-        var next = i*2 + 2;
-        if (next < black.tokens.length)
-            bits.push(black.tokens[next]);
+        var next = black.tokens[i*2 + 2];
+        if (next)
+            bits.push((abbrev && next.length > ABBREV) ? ' [...] ' : next);
     }
 
     return bits;

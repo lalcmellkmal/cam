@@ -196,7 +196,7 @@ var GameView = Backbone.View.extend({
 		var fadeIns = [];
 		_.each(subs, function (sub) {
 			var $a = $('<a/>', {data: {cards: sub.cards}});
-			var tokens = applySubmission(black, sub);
+			var tokens = applySubmission(black, sub, true);
 			renderTokenized($a, tokens);
 			sub.el = $a[0];
 			$a.css({opacity: 0}).appendTo($subs);
