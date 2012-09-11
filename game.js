@@ -82,24 +82,27 @@ G.addPlayer = function (player) {
         return this.warn('Already playing.');
 
     player.game = this;
-    player.dealHand(true);
-    this.players.push(player);
-    this.setChanged('players');
+    var self = this;
+    player.clearScore(function (err) {
+        player.dealHand(true);
+        self.players.push(player);
+        self.setChanged('players');
 
-    if (!this.dealer)
-        this.nextDealer();
+        if (!self.dealer)
+            self.nextDealer();
 
-    player.on('change', this.broadcastRosterCb);
-    if (!this.nominateCb)
-        this.nominateCb = this.nominate.bind(this);
-    player.on('change:selection', this.nominateCb);
-    player.once('dropped', this.dropPlayer.bind(this, player));
+        player.on('change', self.broadcastRosterCb);
+        if (!self.nominateCb)
+            self.nominateCb = self.nominate.bind(self);
+        player.on('change:selection', self.nominateCb);
+        player.once('dropped', self.dropPlayer.bind(self, player));
 
-    if (player.client)
-        this.removeSpec(player.client);
+        if (player.client)
+            self.removeSpec(player.client);
 
-    this.sendState(player);
-    this.newPlayer();
+        self.sendState(player);
+        self.newPlayer();
+    });
 };
 
 G.dropPlayer = function (player) {
@@ -365,7 +368,7 @@ G.gotElection = function (player, choice) {
 
     var m = this.r.multi();
     m.hincrby(this.key + ':scores', winner, 1);
-    m.hincrby('cam:user:' + winner, 'score', 1);
+    player.incrementScore(m);
     var self = this;
     m.exec(function (err, rs) {
         if (err)
@@ -559,6 +562,14 @@ P.sendHand = function (cb) {
         self.send('hand', {cards: cardsFromNames(hand)});
         cb(null);
     });
+};
+
+P.clearScore = function (cb) {
+    this.r.hset(this.key, 'score', '0', cb);
+};
+
+P.incrementScore = function (m) {
+    m.hincrby(this.key, 'score', 1);
 };
 
 P.handle_join = function (msg) {
