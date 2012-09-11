@@ -207,8 +207,12 @@ G.getDealerPlayer = function () {
 };
 
 G.oninactive = function (event, from, to) {
-    this.r.hmset(this.key, {state: 'inactive', black: null});
-    this.sendAll('set', {status: 'Not enough players. Round cancelled.'});
+    var self = this;
+    this.r.hmset(this.key, {state: 'inactive', black: null}, function (err) {
+        if (err)
+            return self.fail(err);
+        self.broadcastState();
+    });
 };
 
 G.fail = function (err) {
@@ -287,6 +291,8 @@ G.onbeforenominate = function () {
     var dealer = this.getDealerPlayer();
     return this.players.every(function (p) { return p == dealer || p.selection; });
 };
+
+G.onbeforedropPlayer = G.onbeforenominate;
 
 G.onelecting = function () {
     var submissions = [], submissionIds = {};
