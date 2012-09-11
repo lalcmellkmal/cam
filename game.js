@@ -434,6 +434,10 @@ G.chat = function (client, msg) {
     this.pushMessage({text: text, name: client.name || 'Anonymous'});
 };
 
+G.logMeta = function (text) {
+    this.pushMessage({text: text, kind: 'system'});
+};
+
 G.pushMessage = function (msg) {
     var self = this;
     var key = this.key + ':chat';

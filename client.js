@@ -285,9 +285,12 @@ var ChatMessageView = Backbone.View.extend({
 	},
 
 	render: function () {
-		var attrs = this.model.attributes;
-		var $name = $('<b/>', {text: '<' + attrs.name + '>'});
-		this.$el.text(' ' + attrs.text).prepend($name);
+		var attrs = this.model.attributes, $p = this.$el;
+		$p.text(attrs.text);
+		if (attrs.name)
+			$p.prepend($('<b/>', {text: '<' + attrs.name + '>'}), ' ');
+		if (attrs.kind)
+			$p.addClass(attrs.kind);
 		return this;
 	},
 });

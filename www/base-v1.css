@@ -92,6 +92,9 @@ ul {
 #messages p {
 	margin: 0.2em;
 }
+#messages .system {
+	color: gray;
+}
 #roster {
 	clear: right;
 	float: right;
