@@ -3,6 +3,10 @@
 if (typeof exports == 'undefined')
     exports = window;
 
+exports.USERNAME_LENGTH = 30;
+exports.MESSAGE_LENGTH = 120;
+exports.CHAT_HISTORY = 40;
+
 exports.parseBlack = function (black) {
     var info = {card: black};
     info.text = black.replace(/_/g, '__________');

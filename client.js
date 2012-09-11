@@ -239,7 +239,7 @@ var AccountView = Backbone.View.extend({
 		this.model.on('change', this.render, this);
 		var $join = $('<input type=button id=join value="Join game">').hide();
 		var $leave = $('<input type=button id=leave value="Leave game">').hide();
-		this.$el.append('<form><input id=username maxlength=30> <input type=submit value="Set name"></form>', $join, $leave);
+		this.$el.append('<form><input id=username maxlength='+USERNAME_LENGTH+'> <input type=submit value="Set name"></form>', $join, $leave);
 	},
 
 	render: function () {
@@ -270,14 +270,93 @@ var AccountView = Backbone.View.extend({
 	},
 });
 
+var ChatMessage = Backbone.Model.extend({
+});
+
+var Chat = Backbone.Collection.extend({
+	model: ChatMessage,
+});
+
+var ChatMessageView = Backbone.View.extend({
+	tagName: 'p',
+
+	initialize: function () {
+		this.model.on('remove', this.remove, this);
+	},
+
+	render: function () {
+		var attrs = this.model.attributes;
+		var $name = $('<b/>', {text: '<' + attrs.name + '>'});
+		this.$el.text(' ' + attrs.text).prepend($name);
+		return this;
+	},
+});
+
+var ChatView = Backbone.View.extend({
+	id: 'chat',
+
+	events: {
+		submit: 'sendChat',
+	},
+
+	initialize: function () {
+		var $messages = $('<div id=messages/>');
+		var $input = $('<input>', {maxlength: MESSAGE_LENGTH});
+		var $form = $('<form/>').append($input);
+		this.$el.append($messages, $form);
+		setTimeout(function () {
+			$input.focus();
+		}, 0);
+
+		this.model.on('add', this.addMessage, this);
+		this.model.on('reset', this.reset, this);
+	},
+
+	reset: function () {
+		var $box = this.$('#messages');
+		$box.empty();
+		for (var i = 0; i < this.model.length; i++) {
+			var view = new ChatMessageView({model: this.model.at(i)});
+			$box.append(view.render().el);
+		}
+		$box.scrollTop($box[0].scrollHeight);
+	},
+
+	addMessage: function (message) {
+		var view = new ChatMessageView({model: message});
+		var $box = this.$('#messages');
+		var $msg = view.render().$el;
+		$msg.hide().fadeIn('fast').appendTo($box);
+		this.trim();
+		$box.scrollTop($box[0].scrollHeight);
+	},
+
+	trim: function () {
+		var over = this.model.length - CHAT_HISTORY;
+		if (over > 0)
+			this.model.remove(this.model.first(over));
+	},
+
+	sendChat: function (event) {
+		event.preventDefault();
+		var $input = this.$('form input');
+		var text = $input.val().trim();
+		if (!text)
+			return;
+		send('chat', {text: text});
+		$input.val('').focus();
+	},
+});
+
 window.account = new Account;
+window.chat = new Chat;
 window.hand = new Cards;
 window.game = new Game;
 
 $(function () {
 	var $game = $('#game');
-	var accountView = new AccountView({model: account});
-	accountView.render().$el.insertBefore($game);
+	new AccountView({model: account}).render().$el.insertBefore($game);
+	new ChatView({model: chat}).render().$el.insertAfter($game);
 	var gameView = new GameView({model: game, el: $game[0]});
 });
 
@@ -311,10 +390,6 @@ sock.onclose = function () {
 };
 
 var dispatch = {
-	account: function () {
-		game.set({account: new Account({name: this.name})});
-	},
-
 	set: function () {
 		var target = 'game';
 		if (this.t) {
@@ -324,12 +399,12 @@ var dispatch = {
 		window[target].set(this);
 	},
 
-	hand: function () {
-		hand.reset(this.cards);
+	add: function () {
+		window[this.t].add(this.objs || this.obj);
 	},
 
-	draw: function () {
-		hand.add(this.cards);
+	reset: function () {
+		window[this.t].reset(this.objs);
 	},
 
 	select: function () {

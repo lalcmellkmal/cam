@@ -1,4 +1,5 @@
 var assets = require('./assets'),
+    common = require('./common'),
     config = require('./config'),
     connect = require('connect'),
     game = require('./game'),
@@ -171,6 +172,10 @@ C.loadUser = function (id) {
                         return self.drop(err);
                 });
             }
+            else {
+                self.state = 'playing';
+                self.game = player.game;
+            }
         });
     });
 };
@@ -186,6 +191,7 @@ C.watchGame = function (gameId, cb) {
             return cb(err);
         }
         gameObj.addSpec(self);
+        self.game = gameObj;
         cb(null);
     });
 };
@@ -202,7 +208,7 @@ C.handle_setName = function (msg) {
     if (typeof msg.name != 'string')
         return this.drop('No name!');
     var name = msg.name.replace(/[^\w .?\/<>'|\\\-+=!#$&*`~]+/g, '');
-    name = name.replace(/\s+/g, ' ').trim().slice(0, 30);
+    name = name.replace(/\s+/g, ' ').trim().slice(0, common.USERNAME_LENGTH);
     if (!name)
         return this.warn('Bad name.');
     if (BAD_NAMES.indexOf(name.toLowerCase()) >= 0)
@@ -234,6 +240,12 @@ C.handle_setName = function (msg) {
     });
 };
 
+C.handle_chat = function (msg) {
+    if (!this.game)
+        return this.warn("Not viewing any games!");
+    this.game.chat(this, msg);
+};
+
 C.warn = function (msg) {
     console.warn(this.name + ': ' + msg);
     if (typeof msg == 'string')
@@ -250,6 +262,7 @@ C.drop = function (reason) {
 
 C.onDisconnected = function () {
     this.emit('disconnected');
+    this.game = null;
     this.sock.removeAllListeners();
     this.removeAllListeners();
 };

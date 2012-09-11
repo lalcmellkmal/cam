@@ -70,6 +70,28 @@ ul {
 	float: right;
 	text-align: right;
 }
+#chat {
+	border: 1px solid #555;
+	border-radius: 3px;
+	clear: both;
+	margin: 10px auto;
+	padding: 5px;
+	width: 90%
+}
+#chat input {
+	width: 99%;
+	margin: 0;
+	padding: 0;
+}
+#messages {
+	background-color: white;
+	overflow: scroll;
+	height: 15em;
+	margin-bottom: 5px;
+}
+#messages p {
+	margin: 0.2em;
+}
 #roster {
 	clear: right;
 	float: right;

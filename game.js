@@ -66,6 +66,7 @@ G.addSpec = function (client) {
     client.on('change:name', this.broadcastRosterCb);
     client.once('disconnected', this.removeSpec.bind(this, client));
     this.sendState(client);
+    this.sendMessageHistory(client);
 };
 
 G.removeSpec = function (client) {
@@ -424,6 +425,35 @@ G.nextDealer = function () {
     this.set({dealer: this.players[0].id});
 };
 
+G.chat = function (client, msg) {
+    if (!msg.text || typeof msg.text != 'string')
+        return this.warn("Bad message.");
+    var text = msg.text.trim().slice(0, common.MESSAGE_LENGTH);
+    if (!text)
+        return this.warn("Bad message.");
+    this.pushMessage({text: text, name: client.name || 'Anonymous'});
+};
+
+G.pushMessage = function (msg) {
+    var self = this;
+    var key = this.key + ':chat';
+    var m = this.r.multi();
+    m.lpush(key, JSON.stringify(msg));
+    m.ltrim(key, 0, common.CHAT_HISTORY-1);
+    m.exec(function (err) {
+        if (err)
+            return client.drop(err);
+        self.sendAll('add', {t: 'chat', obj: msg});
+    });
+};
+
+G.sendMessageHistory = function (dest) {
+    this.r.lrange(this.key + ':chat', 0, -1, function (err, objs) {
+        var log = objs.reverse().join(',');
+        dest.sendRaw('{"a":"reset","t":"chat","objs":[' + log + ']}');
+    });
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 
 function Player(id) {
@@ -489,6 +519,7 @@ P.adopt = function (client) {
             if (err)
                 self.drop(err);
             self.game.sendState(self);
+            self.game.sendMessageHistory(self);
         });
     }
     else
@@ -588,7 +619,7 @@ P.storeNewHand = function (newCards, fresh) {
             return self.drop(err);
         }
         var cards = cardsFromNames(newCards);
-        self.send(fresh ? 'hand' : 'draw', {cards: cards});
+        self.send(fresh ? 'reset' : 'add', {t: 'hand', objs: cards});
     });
 };
 
@@ -597,7 +628,7 @@ P.sendHand = function (cb) {
     this.r.smembers(this.key + ':hand', function (err, hand) {
         if (err)
             return cb(err);
-        self.send('hand', {cards: cardsFromNames(hand)});
+        self.send('reset', {t: 'hand', objs: cardsFromNames(hand)});
         cb(null);
     });
 };
@@ -635,7 +666,7 @@ P.handle_leave = function (msg) {
         if (self.client)
             sameGame.addSpec(self.client);
         self.send('set', {t: 'account', action: 'join'});
-        self.send('hand', {cards: []});
+        self.send('reset', {t: 'hand', objs: []});
     });
 };
 
