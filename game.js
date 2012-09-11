@@ -701,9 +701,7 @@ function setupRound(cb) {
                     return cb("Empty black deck!");
 
                 var m = SHARED_REDIS.multi();
-
-                // TEMP XXX COMPLETE DATA LOSS PLS GO
-                m.flushdb();
+                m.del(['cam:game:1:whiteDiscards', 'cam:game:1:blackDiscards']);
 
                 function makeDeck(key, deck) {
                     m.del(key);
