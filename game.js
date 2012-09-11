@@ -128,15 +128,21 @@ G.dropPlayer = function (player) {
         this.set({dealer: newDealer});
     }
 
-    player.set({game: null});
-    player.removeListener('change', this.broadcastRosterCb);
-    player.removeListener('change:selection', this.nominateCb);
-    player.removeAllListeners('dropped');
+    var self = this;
+    player.discardHand(this.key + ':whiteDiscards', function (err) {
+        if (err)
+            console.error(err);
 
-    if (this.players.length < MIN_PLAYERS)
-        this.notEnoughPlayers();
-    else
-        this.lostPlayer();
+        player.set({game: null});
+        player.removeListener('change', self.broadcastRosterCb);
+        player.removeListener('change:selection', self.nominateCb);
+        player.removeAllListeners('dropped');
+
+        if (self.players.length < MIN_PLAYERS)
+            self.notEnoughPlayers();
+        else
+            self.lostPlayer();
+    });
 };
 
 G.makeRoster = function () {
@@ -568,12 +574,14 @@ P.abandon = function () {
     this.timeout = setTimeout(this.die.bind(this), TIMEOUT);
 };
 
-P.die = function () {
+P.die = function (err) {
     this.emit('dropped');
+
     this.game = null;
     this.key = null;
     this.r = null;
-    // TODO remove listeners etc.
+
+    this.removeAllListeners();
     delete PLAYERS[this.id];
 };
 
@@ -664,6 +672,21 @@ P.sendHand = function (cb) {
             return cb(err);
         self.send('reset', {t: 'hand', objs: cardsFromNames(hand)});
         cb(null);
+    });
+};
+
+P.discardHand = function (destKey, cb) {
+    var game = this.game;
+    var handKey = this.key + ':hand';
+    var self = this;
+    this.r.smembers(handKey, function (err, cards) {
+        if (err)
+            return cb(err);
+        var m = self.r.multi();
+        cards.forEach(function (white) {
+            m.smove(handKey, destKey, white);
+        });
+        m.exec(cb);
     });
 };
 
