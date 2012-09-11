@@ -244,7 +244,7 @@ var AccountView = Backbone.View.extend({
 
 	initialize: function () {
 		this.model.on('change', this.render, this);
-		this.$el.append('<form><input id=username> <input type=submit value="Set name"></form>');
+		this.$el.append('<form><input id=username maxlength=30> <input type=submit value="Set name"></form>');
 	},
 
 	render: function () {
