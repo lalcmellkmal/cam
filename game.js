@@ -90,6 +90,10 @@ G.addPlayer = function (player) {
 
     player.on('change:name', this.broadcastRosterCb);
     player.on('change:score', this.broadcastRosterCb);
+    player.on('change:selection', this.broadcastRosterCb);
+    if (!this.nominateCb)
+        this.nominateCb = this.nominate.bind(this);
+    player.on('change:selection', this.nominateCb);
     player.once('dropped', this.dropPlayer.bind(this, player));
 
     if (player.client)
@@ -120,6 +124,8 @@ G.dropPlayer = function (player) {
     player.set({game: null});
     player.removeListener('change:name', this.broadcastRosterCb);
     player.removeListener('change:score', this.broadcastRosterCb);
+    player.removeListener('change:selection', this.broadcastRosterCb);
+    player.removeListener('change:selection', this.nominateCb);
     player.removeAllListeners('dropped');
 
     if (this.players.length < MIN_PLAYERS)
@@ -576,7 +582,7 @@ P.handle_submit = function (msg) {
 
     if (!cards || !_.isArray(cards) || !cards.length) {
         // Clear selection
-        this.selection = null;
+        this.set({selection: null});
         this.send('select', {cards: []});
         return;
     }
@@ -586,9 +592,8 @@ P.handle_submit = function (msg) {
     if (_.uniq(cards).length != cards.length)
         return this.warn("Duplicate choices!");
 
-    this.selection = msg.cards;
+    this.set({selection: msg.cards});
     this.remindSubmission();
-    this.game.nominate();
 };
 
 P.remindSubmission = function () {
@@ -629,8 +634,8 @@ P.confirmSubmission = function (mapping) {
         this.send('select', {cards: sub.cards, final: true});
     else
         this.send('set', {status: 'Invalid submission!'});
-    this.send('set', {unlocked: false});
-    this.selection = null;
+    this.send('set', {action: null});
+    this.set({selection: null});
 };
 
 P.handle_elect = function (msg) {
