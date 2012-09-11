@@ -117,7 +117,7 @@ G.dropPlayer = function (player) {
             newDealer = this.players[0].id;
         else
             newDealer = null; // state should change for us
-        self.set({dealer: newDealer});
+        this.set({dealer: newDealer});
     }
 
     player.set({game: null});
