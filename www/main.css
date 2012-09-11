@@ -76,7 +76,12 @@ ul {
 }
 #roster em {
 	font-style: normal;
-	color: green;
+	color: #55f;
+}
+#roster .ready {
+	padding-left: 14px;
+	background: url('ready.png') no-repeat left center;
+	background-size: 10px 10px;
 }
 #roster .spec {
 	color: #999;

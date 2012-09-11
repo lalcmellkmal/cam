@@ -28,6 +28,7 @@ function Game() {
     this.broadcastRosterCb = this.deferral('broadcastRoster');
     this.on('change:players', this.broadcastRosterCb);
     this.on('change:specs', this.broadcastRosterCb);
+    this.on('change:dealer', this.broadcastRosterCb);
 
     var changed = this.deferral('broadcastState');
     this.on('change:black', changed);
@@ -497,6 +498,8 @@ P.toJSON = function () {
     var json = this.client ? this.client.toJSON() : {name: this.name};
     json.kind = 'player';
     json.score = this.score;
+    if (this.selection)
+        json.ready = true;
     return json;
 };
 
