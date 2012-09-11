@@ -6,8 +6,8 @@ var _ = require('underscore'),
     StateMachine = require('./state-machine').StateMachine,
     util = require('util');
 
-var HAND_SIZE = 7;
-var MIN_PLAYERS = 2;
+var HAND_SIZE = 8;
+var MIN_PLAYERS = 3;
 
 var GAMES = {};
 var PLAYERS = {};
@@ -208,6 +208,7 @@ G.getDealerPlayer = function () {
 
 G.oninactive = function (event, from, to) {
     this.r.hmset(this.key, {state: 'inactive', black: null});
+    this.sendAll('set', {status: 'Not enough players. Round cancelled.'});
 };
 
 G.fail = function (err) {
