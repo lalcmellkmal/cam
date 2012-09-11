@@ -204,6 +204,13 @@ G.popWhites = function (m, n) {
         m.spop(this.key + ':whites');
 };
 
+G.reshuffleWhites = function (cb) {
+    this.r.renamenx(this.key + ':whiteDiscards', this.key + ':whites', function (err) {
+        // ignore errors (race conditions)
+        cb(null);
+    });
+};
+
 G.getDealerPlayer = function () {
     var dealerId = this.dealer;
     return _.find(this.players, function (p) { return p.id == dealerId; });
@@ -524,33 +531,60 @@ P.dealHand = function (fresh) {
             return self.drop(err);
         if (fresh)
             oldCardCount = 0;
-        if (!self.game || oldCardCount >= HAND_SIZE)
+        var cardsNeeded = HAND_SIZE - oldCardCount;
+        if (!self.game || cardsNeeded < 1)
             return;
 
         var m = self.r.multi();
-        self.game.popWhites(m, HAND_SIZE - oldCardCount);
+        var game = self.game;
+        game.popWhites(m, cardsNeeded);
         m.exec(function (err, rs) {
             if (err)
                 return self.drop(err);
             var newCards = _.compact(rs);
-            if (!fresh && !newCards.length)
-                return;
+            cardsNeeded -= newCards.length;
 
-            var m = self.r.multi();
-            if (fresh)
-                m.del(key);
-            if (newCards.length)
-                m.sadd(key, newCards);
-            m.exec(function (err) {
-                if (err) {
-                    // redis probably failed, not much point trying to recover
-                    self.warn("Lost " + newCards.length + " card(s).");
-                    return self.drop(err);
-                }
-                var cards = cardsFromNames(newCards);
-                self.send(fresh ? 'hand' : 'draw', {cards: cards});
-            });
+            if (cardsNeeded > 0) {
+                game.reshuffleWhites(function (err) {
+                    if (err) {
+                        self.warn("Lost " + newCards.length + " card(s).");
+                        return self.drop(err);
+                    }
+                    var m = self.r.multi();
+                    game.popWhites(m, cardsNeeded);
+                    m.exec(function (err, rs) {
+                        if (err) {
+                            self.warn("Lost " + newCards.length + " card(s).");
+                            return self.drop(err);
+                        }
+                        newCards = newCards.concat(_.compact(rs));
+                        self.storeNewHand(newCards, fresh);
+                    });
+                });
+            }
+            else
+                self.storeNewHand(newCards, fresh);
         });
+    });
+};
+
+P.storeNewHand = function (newCards, fresh) {
+    if (!fresh && !newCards.length)
+        return;
+    var m = this.r.multi();
+    if (fresh)
+        m.del(key);
+    if (newCards.length)
+        m.sadd(key, newCards);
+    var self = this;
+    m.exec(function (err) {
+        if (err) {
+            // redis probably failed, not much point trying to recover
+            self.warn("Lost " + newCards.length + " card(s).");
+            return self.drop(err);
+        }
+        var cards = cardsFromNames(newCards);
+        self.send(fresh ? 'hand' : 'draw', {cards: cards});
     });
 };
 
