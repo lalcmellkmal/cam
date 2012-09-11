@@ -647,7 +647,7 @@ function cardsFromNames(hand) {
 P.handle_submit = function (msg) {
     var cards = msg.cards;
 
-    if (!this.game)
+    if (!this.game || this.game.current != 'nominating')
         return;
 
     if (!cards || !_.isArray(cards) || !cards.length) {
