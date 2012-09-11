@@ -70,4 +70,8 @@ exports.applySubmission = function (black, sub, abbrev) {
     return bits;
 };
 
+exports.randomId = function () {
+        return '' + (Math.floor(Math.random() * 1e16) + 1);
+};
+
 })();

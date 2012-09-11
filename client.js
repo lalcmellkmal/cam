@@ -358,13 +358,6 @@ window.chat = new Chat;
 window.hand = new Cards;
 window.game = new Game;
 
-$(function () {
-	var $game = $('#game');
-	new AccountView({model: account}).render().$el.insertBefore($game);
-	new ChatView({model: chat}).render().$el.insertAfter($game);
-	var gameView = new GameView({model: game, el: $game[0]});
-});
-
 function send(type, msg) {
 	msg.a = type;
 	msg = JSON.stringify(msg);
@@ -445,8 +438,11 @@ var dispatch = {
 	},
 };
 
-function randomId() {
-        return '' + (Math.floor(Math.random() * 1e16) + 1);
-}
+$(function () {
+	var $game = $('#game');
+	new AccountView({model: account}).render().$el.insertBefore($game);
+	new ChatView({model: chat}).render().$el.insertAfter($game);
+	var gameView = new GameView({model: game, el: $game[0]});
+});
 
 })();
