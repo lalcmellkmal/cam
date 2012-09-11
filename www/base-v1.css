@@ -68,6 +68,7 @@ ul {
 }
 #account {
 	float: right;
+	text-align: right;
 }
 #roster {
 	clear: right;

@@ -115,7 +115,6 @@ var Game = Backbone.Model.extend({
 
 var GameView = Backbone.View.extend({
 	events: {
-		'click #join': 'joinGame',
 		'click .electing a': 'elect',
 	},
 
@@ -125,21 +124,13 @@ var GameView = Backbone.View.extend({
 		var $submissions = $('<div/>', {id: 'submissions'});
 
 		var black = $('<li class="black"><a/></li>').hide();
-		var joinButton = $('<input type=button id=join value=Join>').hide();
-		this.$el.prepend(black, $roster, $submissions
-			).append(joinButton, handView.el);
+		this.$el.prepend(black, $roster, $submissions).append(handView.el);
 
 		this.model.on('change:status change:error', this.renderStatus, this);
-		this.model.on('change:canJoin', this.renderCanJoin, this);
 		this.model.on('change:roster', this.renderRoster, this);
 		this.model.on('change:black', this.renderBlack, this);
 		this.model.on('change:action', this.renderAction, this);
 		this.model.on('change:submissions change:blackInfo', this.renderSubmissions, this);
-	},
-
-	joinGame: function () {
-		send('join', {});
-		this.model.set({canJoin: false});
 	},
 
 	elect: function (event) {
@@ -240,16 +231,35 @@ var AccountView = Backbone.View.extend({
 
 	events: {
 		submit: 'changeName',
+		'click #join': 'joinGame',
+		'click #leave': 'leaveGame',
 	},
 
 	initialize: function () {
 		this.model.on('change', this.render, this);
-		this.$el.append('<form><input id=username maxlength=30> <input type=submit value="Set name"></form>');
+		var $join = $('<input type=button id=join value="Join game">').hide();
+		var $leave = $('<input type=button id=leave value="Leave game">').hide();
+		this.$el.append('<form><input id=username maxlength=30> <input type=submit value="Set name"></form>', $join, $leave);
 	},
 
 	render: function () {
-		this.$('#username').val(this.model.get('name') || '');
+		var attrs = this.model.attributes;
+		this.$('#username').val(attrs.name || '');
+		this.$('#join').toggle(attrs.action == 'join');
+		this.$('#leave').toggle(attrs.action == 'leave');
 		return this;
+	},
+
+	joinGame: function () {
+		send('join', {});
+		this.model.set({action: null});
+	},
+
+	leaveGame: function () {
+		if (!confirm("Sure you want to leave? You'll lose your points."))
+			return;
+		send('leave', {});
+		this.model.set({action: null});
 	},
 
 	changeName: function (event) {

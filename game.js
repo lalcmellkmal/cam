@@ -492,7 +492,7 @@ P.adopt = function (client) {
         });
     }
     else
-        this.send('set', {canJoin: true});
+        this.send('set', {t: 'account', action: 'join'});
     return true;
 };
 
@@ -617,9 +617,25 @@ P.handle_join = function (msg) {
         Game.load(gameId, function (err, game) {
             if (err)
                 return self.drop(err);
-            self.send('set', {canJoin: false});
+            self.send('set', {t: 'account', action: 'leave'});
             game.addPlayer(self);
         });
+    });
+};
+
+P.handle_leave = function (msg) {
+    var sameGame = this.game;
+    if (!sameGame)
+        return this.warn("Not playing yet!");
+    var self = this;
+    this.r.hdel(this.key, 'game', function (err) {
+        if (err)
+            return self.drop(err);
+        sameGame.dropPlayer(self);
+        if (self.client)
+            sameGame.addSpec(self.client);
+        self.send('set', {t: 'account', action: 'join'});
+        self.send('hand', {cards: []});
     });
 };
 
