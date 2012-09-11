@@ -1,4 +1,5 @@
 var async = require('async'),
+    config = require('./config'),
     crypto = require('crypto'),
     fs = require('fs'),
     joinPath = require('path').join;
@@ -21,6 +22,7 @@ exports.buildScripts = function (cb) {
             if (err)
                 return cb(err);
             var html = indexTmpl.replace('$CLIENT', clientJsPath);
+            html = html.replace('$SOCKJS_URL', JSON.stringify(config.SOCKJS_URL));
             scriptInfo.indexHtml = new Buffer(html, 'UTF-8');
             cb(null, scriptInfo);
         });
