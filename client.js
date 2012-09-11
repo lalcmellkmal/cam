@@ -255,7 +255,6 @@ var AccountView = Backbone.View.extend({
 	changeName: function (event) {
 		event.preventDefault();
 		var name = this.$('#username').val().trim();
-		console.log(name);
 		if (name)
 			send('setName', {name: name});
 	},
@@ -275,7 +274,6 @@ $(function () {
 function send(type, msg) {
 	msg.a = type;
 	msg = JSON.stringify(msg);
-	console.log('> ' + msg);
 	sock.send(msg);
 }
 
@@ -291,7 +289,6 @@ sock.onopen = function () {
 
 sock.onmessage = function (msg) {
 	_.each(JSON.parse(msg.data), function (data) {
-		console.log('< ' + JSON.stringify(data));
 		dispatch[data.a].call(data);
 	});
 };
@@ -348,7 +345,6 @@ var dispatch = {
 	elect: function () {
 		var winner = this.cards;
 		_.each(game.get('submissions'), function (sub) {
-			console.log('submission', sub);
 			if (!sub.el)
 				return;
 			if (_.isEqual(sub.cards, winner))
