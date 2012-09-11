@@ -53,7 +53,7 @@ StateMachine.create({
         {name: 'newPlayer', from: 'inactive', to: 'nominating'},
         {name: 'nominate', from: 'nominating', to: 'electing'},
         {name: 'elect', from: 'electing', to: 'nominating'},
-        {name: 'dropPlayer', from: 'nominating', to: 'electing'},
+        {name: 'lostPlayer', from: 'nominating', to: 'electing'},
         {name: 'notEnoughPlayers', from: ['nominating', 'electing'], to: 'inactive'},
     ],
 });
@@ -128,7 +128,7 @@ G.dropPlayer = function (player) {
     if (this.players.length < MIN_PLAYERS)
         this.notEnoughPlayers();
     else
-        this.dropPlayer();
+        this.lostPlayer();
 };
 
 G.makeRoster = function () {
@@ -292,7 +292,7 @@ G.onbeforenominate = function () {
     return this.players.every(function (p) { return p == dealer || p.selection; });
 };
 
-G.onbeforedropPlayer = G.onbeforenominate;
+G.onbeforelostPlayer = G.onbeforenominate;
 
 G.onelecting = function () {
     var submissions = [], submissionIds = {};
