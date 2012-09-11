@@ -193,10 +193,11 @@ var GameView = Backbone.View.extend({
 		if (!subs || !subs.length || !black)
 			return $subs.hide();
 		$subs.empty();
-		var self = this;
 		var fadeIns = [];
 		_.each(subs, function (sub) {
-			var $a = self.renderSubmission(black, sub);
+			var $a = $('<a/>', {data: {cards: sub.cards}});
+			var tokens = applySubmission(black, sub);
+			renderTokenized($a, tokens);
 			sub.el = $a[0];
 			$a.css({opacity: 0}).appendTo($subs);
 			fadeIns.push($a);
@@ -210,18 +211,16 @@ var GameView = Backbone.View.extend({
 		}
 		showNext();
 	},
-
-	renderSubmission: function (black, sub) {
-		var $a = $('<a/>', {data: {cards: sub.cards}});
-		_.each(applySubmission(black, sub), function (bit) {
-			if (bit.white)
-				$a.append($('<b/>', {text: bit.white}));
-			else
-				$a.append(document.createTextNode(bit));
-		});
-		return $a;
-	},
 });
+
+function renderTokenized($dest, tokens) {
+	_.each(tokens, function (bit) {
+		if (bit.white)
+			$dest.append($('<b/>', {text: bit.white}));
+		else
+			$dest.append(document.createTextNode(bit));
+	});
+}
 
 var Account = Backbone.Model.extend({
 });
@@ -286,7 +285,10 @@ var ChatMessageView = Backbone.View.extend({
 
 	render: function () {
 		var attrs = this.model.attributes, $p = this.$el;
-		$p.text(attrs.text);
+		if (_.isArray(attrs.text))
+			renderTokenized($p.empty(), attrs.text);
+		else
+			$p.text(attrs.text);
 		if (attrs.name)
 			$p.prepend($('<b/>', {text: '<' + attrs.name + '>'}), ' ');
 		if (attrs.kind)

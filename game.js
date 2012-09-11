@@ -371,7 +371,7 @@ G.gotElection = function (player, choice) {
     for (var i = 0; i < this.submissions.length; i++) {
         var sub = this.submissions[i];
         if (_.isEqual(sub.cards, choice)) {
-            winner = sub.id;
+            winner = sub;
             break;
         }
     }
@@ -379,7 +379,7 @@ G.gotElection = function (player, choice) {
         return player.warn("Invalid choice.");
 
     var m = this.r.multi();
-    m.hincrby(this.key + ':scores', winner, 1);
+    m.hincrby(this.key + ':scores', winner.id, 1);
     player.incrementTotalScore(m);
     var self = this;
     m.exec(function (err, rs) {
@@ -387,15 +387,18 @@ G.gotElection = function (player, choice) {
             return self.fail(err);
         var gameScore = rs[0], totalScore = rs[1];
         var m = self.r.multi();
-        m.zadd('cam:leaderboard', totalScore, winner);
+        m.zadd('cam:leaderboard', totalScore, winner.id);
         m.exec(function (err) {
             if (err)
                 return self.fail(err);
-            var player = PLAYERS[winner];
+            var player = PLAYERS[winner.id];
             if (player)
                 player.set({score: gameScore});
 
             var name = (player && player.name) || '<gone>';
+            var phrase = common.applySubmission(self.black, winner);
+            phrase.unshift(name + ' won with phrase: ');
+            self.logMeta(phrase);
             self.sendAll('set', {status: name + ' won!', action: null});
             self.sendAll('elect', {cards: choice});
             setTimeout(function () {
