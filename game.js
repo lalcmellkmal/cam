@@ -366,6 +366,7 @@ G.gotElection = function (player, choice) {
         return player.warn("Not picking right now.");
     if (player.id != this.dealer)
         return player.warn("You are not the dealer.");
+    var dealerName = player.name;
 
     // Find the winner's submission
     var winner;
@@ -417,8 +418,11 @@ G.gotElection = function (player, choice) {
 
             var name = (player && player.name) || '<gone>';
             var phrase = common.applySubmission(self.black, winner, false);
-            phrase.unshift(name + ' won with phrase: ');
+            phrase.unshift(name + ' won with: ');
+            if (dealerName)
+                phrase.push(' (picked by ' + dealerName + ')');
             self.logMeta(phrase);
+
             self.sendAll('set', {status: name + ' won!', action: null});
             self.sendAll('elect', {cards: choice});
 
