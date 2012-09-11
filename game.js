@@ -89,9 +89,7 @@ G.addPlayer = function (player) {
     if (!this.dealer)
         this.nextDealer();
 
-    player.on('change:name', this.broadcastRosterCb);
-    player.on('change:score', this.broadcastRosterCb);
-    player.on('change:selection', this.broadcastRosterCb);
+    player.on('change', this.broadcastRosterCb);
     if (!this.nominateCb)
         this.nominateCb = this.nominate.bind(this);
     player.on('change:selection', this.nominateCb);
@@ -123,9 +121,7 @@ G.dropPlayer = function (player) {
     }
 
     player.set({game: null});
-    player.removeListener('change:name', this.broadcastRosterCb);
-    player.removeListener('change:score', this.broadcastRosterCb);
-    player.removeListener('change:selection', this.broadcastRosterCb);
+    player.removeListener('change', this.broadcastRosterCb);
     player.removeListener('change:selection', this.nominateCb);
     player.removeAllListeners('dropped');
 
@@ -377,7 +373,7 @@ G.gotElection = function (player, choice) {
             if (player)
                 player.set({score: gameScore});
 
-            var name = (player && (player.name || 'Anonymous')) || '<gone>';
+            var name = (player && player.name) || '<gone>';
             self.sendAll('set', {status: name + ' won!', action: null});
             self.sendAll('elect', {cards: choice});
             setTimeout(function () {
@@ -461,10 +457,9 @@ P.adopt = function (client) {
         this.timeout = 0;
     }
     client.player = this;
-    this.client = client;
     this.key = client.key;
     this.r = client.r;
-    this.set({name: client.name});
+    this.set({client: client, name: client.name || 'Anonymous'});
     client.once('disconnected', this.abandon.bind(this));
 
     if (this.isPlaying()) {
@@ -483,13 +478,15 @@ P.adopt = function (client) {
 P.abandon = function () {
     var name = this.client.name;
     this.client.player = null;
-    this.client = null;
-    this.set({name: name ? name + ' (dropped)' : '(dropped)'});
+    this.set({client: null});
     this.timeout = setTimeout(this.die.bind(this), TIMEOUT);
 };
 
 P.die = function () {
-    this.emit('leave');
+    this.emit('dropped');
+    this.game = null;
+    this.key = null;
+    this.r = null;
     // TODO remove listeners etc.
     delete PLAYERS[this.id];
 };
@@ -500,6 +497,8 @@ P.toJSON = function () {
     json.score = this.score;
     if (this.selection)
         json.ready = true;
+    if (!this.client)
+        json.idle = true;
     return json;
 };
 

@@ -78,6 +78,12 @@ ul {
 	font-style: normal;
 	color: #55f;
 }
+#roster .dealer {
+	font-weight: bold;
+}
+#roster .idle {
+	text-decoration: line-through;
+}
 #roster .ready {
 	padding-left: 14px;
 	background: url('ready.png') no-repeat left center;

@@ -166,12 +166,12 @@ var GameView = Backbone.View.extend({
 				text: player.name,
 				class: player.kind,
 			});
-			if (player.kind == 'dealer')
-				$a.prepend('<b>Dealer:</b> ');
 			if (player.score)
 				$a.append(' ', $('<em/>', {text: '('+player.score+')'}));
 			if (player.ready)
 				$a.addClass('ready');
+			if (player.idle)
+				$a.addClass('idle');
 			$list.append($a, '<br>');
 		});
 	},

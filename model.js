@@ -30,6 +30,7 @@ M.change = function () {
         if (this._changed[k])
             this.emit('change:' + k);
     }
+    this.emit('change');
     this._changed = {};
 };
 
