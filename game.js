@@ -83,7 +83,11 @@ G.addPlayer = function (player) {
 
     player.game = this;
     var self = this;
-    player.clearScore(function (err) {
+    this.r.hdel(this.key + ':scores', player.id, function (err) {
+        if (err)
+            return self.fail(err);
+        player.set({score: 0});
+
         player.dealHand(true);
         self.players.push(player);
         self.setChanged('players');
@@ -375,7 +379,7 @@ G.gotElection = function (player, choice) {
 
     var m = this.r.multi();
     m.hincrby(this.key + ':scores', winner, 1);
-    player.incrementScore(m);
+    player.incrementTotalScore(m);
     var self = this;
     m.exec(function (err, rs) {
         if (err)
@@ -524,9 +528,8 @@ P.isPlaying = function () {
 };
 
 P.dealHand = function (fresh) {
-    var key = this.key + ':hand';
     var self = this;
-    this.r.scard(key, function (err, oldCardCount) {
+    this.r.scard(this.key + ':hand', function (err, oldCardCount) {
         if (err)
             return self.drop(err);
         if (fresh)
@@ -535,9 +538,9 @@ P.dealHand = function (fresh) {
         if (!self.game || cardsNeeded < 1)
             return;
 
+        var sameGame = self.game;
         var m = self.r.multi();
-        var game = self.game;
-        game.popWhites(m, cardsNeeded);
+        sameGame.popWhites(m, cardsNeeded);
         m.exec(function (err, rs) {
             if (err)
                 return self.drop(err);
@@ -545,13 +548,13 @@ P.dealHand = function (fresh) {
             cardsNeeded -= newCards.length;
 
             if (cardsNeeded > 0) {
-                game.reshuffleWhites(function (err) {
+                sameGame.reshuffleWhites(function (err) {
                     if (err) {
                         self.warn("Lost " + newCards.length + " card(s).");
                         return self.drop(err);
                     }
                     var m = self.r.multi();
-                    game.popWhites(m, cardsNeeded);
+                    sameGame.popWhites(m, cardsNeeded);
                     m.exec(function (err, rs) {
                         if (err) {
                             self.warn("Lost " + newCards.length + " card(s).");
@@ -571,6 +574,7 @@ P.dealHand = function (fresh) {
 P.storeNewHand = function (newCards, fresh) {
     if (!fresh && !newCards.length)
         return;
+    var key = this.key + ':hand';
     var m = this.r.multi();
     if (fresh)
         m.del(key);
@@ -598,11 +602,7 @@ P.sendHand = function (cb) {
     });
 };
 
-P.clearScore = function (cb) {
-    this.r.hset(this.key, 'score', '0', cb);
-};
-
-P.incrementScore = function (m) {
+P.incrementTotalScore = function (m) {
     m.hincrby(this.key, 'score', 1);
 };
 
@@ -746,7 +746,7 @@ function setupRound(cb) {
                     return cb("Empty black deck!");
 
                 var m = SHARED_REDIS.multi();
-                m.del(['cam:game:1:whiteDiscards', 'cam:game:1:blackDiscards']);
+                m.del(['cam:game:1:whiteDiscards', 'cam:game:1:blackDiscards', 'cam:game:1:scores']);
 
                 function makeDeck(key, deck) {
                     m.del(key);
