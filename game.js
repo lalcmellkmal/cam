@@ -52,7 +52,7 @@ StateMachine.create({
     events: [
         {name: 'newPlayer', from: 'inactive', to: 'nominating'},
         {name: 'nominate', from: 'nominating', to: 'electing'},
-        {name: 'elect', from: 'electing', to: 'nominating'},
+        {name: 'victoryAwarded', from: 'electing', to: 'nominating'},
         {name: 'lostPlayer', from: 'nominating', to: 'electing'},
         {name: 'notEnoughPlayers', from: ['nominating', 'electing'], to: 'inactive'},
     ],
@@ -367,6 +367,7 @@ G.gotElection = function (player, choice) {
     if (player.id != this.dealer)
         return player.warn("You are not the dealer.");
 
+    // Find the winner's submission
     var winner;
     for (var i = 0; i < this.submissions.length; i++) {
         var sub = this.submissions[i];
@@ -378,19 +379,38 @@ G.gotElection = function (player, choice) {
     if (!winner)
         return player.warn("Invalid choice.");
 
+    // Dumb workaround
+    // Ought to use states to do this?
+    if (this.electionLock)
+        return;
+    var self = this;
+    this.electionLock = setTimeout(function () {
+        // just in case
+        self.electionLock = 0;
+    }, 5000);
+
+    function releaseLock(err) {
+        if (self.electionLock) {
+            clearTimeout(self.electionLock);
+            self.electionLock = 0;
+        }
+        if (err)
+            self.fail(err);
+    }
+
     var m = this.r.multi();
     m.hincrby(this.key + ':scores', winner.id, 1);
     player.incrementTotalScore(m);
-    var self = this;
     m.exec(function (err, rs) {
         if (err)
-            return self.fail(err);
+            return releaseLock(err);
         var gameScore = rs[0], totalScore = rs[1];
         var m = self.r.multi();
         m.zadd('cam:leaderboard', totalScore, winner.id);
         m.exec(function (err) {
             if (err)
-                return self.fail(err);
+                return releaseLock(err);
+
             var player = PLAYERS[winner.id];
             if (player)
                 player.set({score: gameScore});
@@ -401,9 +421,12 @@ G.gotElection = function (player, choice) {
             self.logMeta(phrase);
             self.sendAll('set', {status: name + ' won!', action: null});
             self.sendAll('elect', {cards: choice});
+
+            // Pause for announcement (would be nice to defer this in the client instead)
             setTimeout(function () {
+                releaseLock(null);
                 self.nextDealer();
-                self.elect();
+                self.victoryAwarded();
             }, 3000);
         });
     });
