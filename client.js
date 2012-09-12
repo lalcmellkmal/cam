@@ -124,7 +124,8 @@ var GameView = Backbone.View.extend({
 		var $submissions = $('<div/>', {id: 'submissions'});
 
 		var black = $('<li class="black"><a/></li>').hide();
-		this.$el.prepend(black, $roster, $submissions).append(handView.el);
+		var $chat = new ChatView({model: chat}).render().$el;
+		this.$el.prepend(black, $roster, $chat, $submissions).append(handView.el);
 
 		this.model.on('change:status change:error', this.renderStatus, this);
 		this.model.on('change:roster', this.renderRoster, this);
@@ -541,7 +542,6 @@ $(function () {
 	var $game = $('#game');
 	new AccountView({model: account}).render().$el.insertBefore($game);
 	suggestionBox().insertAfter($game);
-	new ChatView({model: chat}).render().$el.insertAfter($game);
 	var gameView = new GameView({model: game, el: $game[0]});
 	window.addEventListener('focus', onFocus, false);
 	window.addEventListener('blur', onBlur, false);

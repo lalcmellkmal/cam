@@ -23,6 +23,7 @@ li {
 li.black {
 	background-color: black;
 	color: #f0f0f0;
+	margin-bottom: 1em;
 }
 li.normal {
 	color: #aaa;
@@ -65,18 +66,21 @@ li a {
 }
 ul {
 	list-style: none;
+	margin: 0;
+	padding: 0;
 }
 #account {
 	float: right;
 	text-align: right;
 }
 #chat {
-	border: 1px solid #555;
+	background-color: white;
+	border: 1px solid #aaa;
 	border-radius: 3px;
-	clear: both;
-	margin: 10px auto;
+	float: right;
+	margin: 0.25em 0;
 	padding: 5px;
-	width: 90%
+	width: 30em;
 }
 #chat input {
 	width: 99%;
@@ -84,9 +88,8 @@ ul {
 	padding: 0;
 }
 #messages {
-	background-color: white;
 	overflow: scroll;
-	height: 15em;
+	height: 13em;
 	margin-bottom: 5px;
 }
 #messages p {
@@ -96,12 +99,16 @@ ul {
 	color: gray;
 }
 #roster {
+	background-color: white;
+	border-radius: 5px;
 	clear: right;
 	float: right;
 	overflow: scroll;
+	margin: 0.25em 0;
 	padding: 0.5em;
 	text-align: right;
 	height: 13em;
+	width: 10em;
 }
 #roster em {
 	font-style: normal;
@@ -124,7 +131,7 @@ ul {
 #status {
 	clear: both;
 	font-weight: bold;
-	text-align: center;
+	text-align: left;
 	padding: 0.5em 0.5em 0 0.5em;
 	margin: 0;
 }
@@ -159,7 +166,9 @@ ul {
 	border-color: white;
 }
 #suggestions {
-	text-align: right;
 	color: gray;
+	clear: both;
+	padding-top: 2em;
 	size: small;
+	text-align: right;
 }
