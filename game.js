@@ -370,8 +370,12 @@ G.onelecting = function () {
     async.forEach(this.players, checkSubmission, function (err) {
         if (err)
             return self.fail(err);
-        else if (!submissions.length)
-            return self.fail('No submissions!'); // need to fail gracefully
+        else if (!submissions.length) {
+            self.logMeta("For some reason, no one wins.");
+            self.nextDealer();
+            self.victoryAwarded();
+            return;
+        }
         shuffle(submissions);
 
         var m = self.r.multi();
