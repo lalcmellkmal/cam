@@ -9,6 +9,7 @@ var _ = require('underscore'),
 var HAND_SIZE = 8;
 var MIN_PLAYERS = 3;
 var MAX_PLAYERS = 10;
+var MESSAGE_RATE = 7;
 
 var GAMES = {};
 var PLAYERS = {};
@@ -185,8 +186,16 @@ G.broadcastRoster = function () {
 };
 
 G.playerNameChanged = function (name, player, info) {
-    if (info.previous && info.previous != 'Anonymous')
-        this.logMeta(info.previous + ' changed their name to ' + name + '.');
+    var prev = info.previous;
+    if (!prev || prev == 'Anonymous')
+        return;
+    var self = this;
+    this.rateLimit(player, function (err, okay) {
+        if (err)
+            return player.drop(err);
+        if (okay)
+            self.logMeta(prev + ' changed their name to ' + name + '.');
+    });
 };
 
 G.onbeforenewPlayer = function () {
@@ -560,13 +569,38 @@ G.nextDealer = function () {
     this.set({dealer: this.players[0].id});
 };
 
+function spamKey(id) {
+    var minute = Math.floor(new Date().getTime() / (1000*60));
+    return 'cam:spam:' + id + ':' + minute;
+}
+
+G.rateLimit = function (client, cb) {
+    var key = spamKey(client.id);
+    this.r.multi().incr(key).expire(key, 60).exec(function (err, rs) {
+        if (err)
+            return cb(err);
+        if (rs[0] > MESSAGE_RATE) {
+            client.warn("It's time to stop posting.");
+            cb(null, false);
+        }
+        else
+            cb(null, true);
+    });
+};
+
 G.chat = function (client, msg) {
     if (!msg.text || typeof msg.text != 'string')
         return this.warn("Bad message.");
     var text = msg.text.trim().slice(0, common.MESSAGE_LENGTH);
     if (!text)
         return this.warn("Bad message.");
-    this.pushMessage({text: text, name: client.name || 'Anonymous'});
+    var self = this;
+    this.rateLimit(client, function (err, okay) {
+        if (err)
+            return client.drop(err);
+        if (okay)
+            self.pushMessage({text: text, name: client.name || 'Anonymous'});
+    });
 };
 
 G.logMeta = function (text) {
