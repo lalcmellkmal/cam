@@ -760,8 +760,6 @@ P.sudoku = function () {
 };
 
 P.cleanUp = function () {
-    this.key = null;
-    this.r = null;
     this.removeAllListeners();
     delete PLAYERS[this.id];
 };
