@@ -6,7 +6,7 @@ else
     _ = require('underscore');
 
 _.extend(exports, {
-    USERNAME_LENGTH: 30,
+    USERNAME_LENGTH: 15,
     MESSAGE_LENGTH: 120,
     CHAT_HISTORY: 40,
     NOMINATION_TIMEOUT: 30,
