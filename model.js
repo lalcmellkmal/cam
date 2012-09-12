@@ -5,6 +5,7 @@ function Model() {
     events.EventEmitter.call(this);
     this._changed = {};
     this._changeTimeout = 0;
+    this._previousAttributes = {};
     this._defers = {};
 }
 util.inherits(Model, events.EventEmitter);
@@ -14,6 +15,8 @@ var M = Model.prototype;
 M.set = function (hash) {
     for (var k in hash) {
         if (this[k] !== hash[k]) {
+            if (!(k in this._previousAttributes))
+                this._previousAttributes[k] = this[k];
             this[k] = hash[k];
             this.setChanged(k);
         }
@@ -27,11 +30,16 @@ M.setChanged = function (key) {
 
 M.change = function () {
     for (var k in this._changed) {
-        if (this._changed[k])
-            this.emit('change:' + k);
+        if (this._changed[k]) {
+            var info = {};
+            if (k in this._previousAttributes)
+                info.previous = this._previousAttributes[k];
+            this.emit('change:' + k, this[k], this, info);
+        }
     }
-    this.emit('change');
+    this.emit('change', this);
     this._changed = {};
+    this._previousAttributes = {};
 };
 
 M.defer = function (name) {

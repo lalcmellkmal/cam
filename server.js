@@ -234,9 +234,6 @@ C.handle_setName = function (msg) {
             self.emit('change:name', name);
             if (self.player)
                 self.player.set({name: name});
-            // XXX: should really observe this change
-            if (self.game)
-                self.game.logMeta(oldName + ' changed their name to ' + name + '.');
             self.send('set', {t: 'account', name: name});
         });
     });

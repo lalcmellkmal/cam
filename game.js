@@ -35,6 +35,8 @@ function Game() {
     this.on('change:dealer', changed);
     this.on('change:submissions', changed);
 
+    this.playerNameChangedCb = this.playerNameChanged.bind(this);
+
     this.on('change:submissions', this.setupElectionTimer.bind(this));
 }
 util.inherits(Game, Model);
@@ -103,6 +105,7 @@ G.addPlayer = function (player) {
         if (!self.nominateCb)
             self.nominateCb = self.nominate.bind(self);
         player.on('change:selection', self.nominateCb);
+        player.on('change:name', self.playerNameChangedCb);
         player.once('dropped', self.dropPlayer.bind(self, player));
 
         if (player.client)
@@ -140,6 +143,7 @@ G.dropPlayer = function (player) {
         player.set({game: null});
         player.removeListener('change', self.broadcastRosterCb);
         player.removeListener('change:selection', self.nominateCb);
+        player.removeListener('change:name', self.playerNameChangedCb);
         player.removeAllListeners('dropped');
         player.emit('dropComplete');
 
@@ -168,6 +172,10 @@ G.sendRoster = function (dest) {
 
 G.broadcastRoster = function () {
     this.sendAll('set', {roster: this.makeRoster()});
+};
+
+G.playerNameChanged = function (name, player, info) {
+    this.logMeta(info.previous + ' changed their name to ' + name + '.');
 };
 
 G.onbeforenewPlayer = function () {
