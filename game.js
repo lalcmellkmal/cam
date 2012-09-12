@@ -9,6 +9,7 @@ var _ = require('underscore'),
 var HAND_SIZE = 8;
 var MIN_PLAYERS = 3;
 var MAX_PLAYERS = 20;
+var ROUND_POINTS = 10;
 var MESSAGE_RATE = 7;
 
 var GAMES = {};
@@ -402,8 +403,7 @@ G.onelecting = function () {
             return self.fail(err);
         else if (!submissions.length) {
             self.logMeta("For some reason, no one wins.");
-            self.nextDealer();
-            self.victoryAwarded();
+            self.nextNominations();
             return;
         }
         shuffle(submissions);
@@ -514,10 +514,51 @@ G.electVictor = function (winningSub, dealer) {
             // Pause for announcement (would be nice to defer this in the client instead)
             setTimeout(function () {
                 self.releaseElectionLock(null);
-                self.nextDealer();
-                self.victoryAwarded();
+                if (gameScore < ROUND_POINTS)
+                    self.nextNominations();
+                else
+                    self.roundOver(name);
             }, 3000);
         });
+    });
+};
+
+G.nextNominations = function () {
+    this.nextDealer();
+    this.victoryAwarded();
+};
+
+G.roundOver = function (winner) {
+    this.logMeta(['The round was won by ', {white: winner}, '!']);
+    this.sendAll('set', {status: 'The round was won by ' + winner + '!'});
+
+    var self = this;
+    async.forEach(this.players, function (player, cb) {
+        // dealHand overwrites the old cards, so need to discard first
+        player.discardHand(self.key + ':whiteDiscards', function (err) {
+            if (err)
+                return cb(err);
+            player.dealHand(true);
+            cb(null);
+        });
+    }, function (err) {
+        if (err)
+            console.error(err);
+
+        setTimeout(function () {
+            self.players.forEach(function (player) {
+                player.set({score: 0});
+                player.sendHand(function (err) {
+                    if (err)
+                        return player.drop(err);
+                });
+            });
+            self.r.del(self.key + ':scores', function (err) {
+                if (err)
+                    return self.fail(err);
+                self.nextNominations();
+            });
+        }, 10 * 1000);
     });
 };
 
