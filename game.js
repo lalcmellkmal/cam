@@ -127,6 +127,7 @@ G.dropPlayer = function (player) {
         else
             newDealer = null; // state should change for us
         this.set({dealer: newDealer});
+        this.electRandom();
     }
 
     var self = this;
@@ -405,50 +406,34 @@ G.gotElection = function (dealer, choice) {
     if (dealer.id != this.dealer)
         return dealer.warn("You are not the dealer.");
 
-    var winningSub;
     for (var i = 0; i < this.submissions.length; i++) {
         var sub = this.submissions[i];
         if (_.isEqual(sub.cards, choice)) {
-            winningSub = sub;
-            break;
+            if (this.acquireElectionLock())
+                this.electVictor(sub, dealer);
+            return;
         }
     }
-    if (!winningSub)
-        return dealer.warn("Invalid choice.");
+    dealer.warn("Invalid choice.");
+};
 
-    // Dumb workaround
-    // Ought to use states to do this?
-    if (this.electionLock)
-        return;
-    var self = this;
-    this.electionLock = setTimeout(function () {
-        // just in case
-        self.electionLock = 0;
-    }, 5000);
-
-    function releaseLock(err) {
-        if (self.electionLock) {
-            clearTimeout(self.electionLock);
-            self.electionLock = 0;
-        }
-        if (err)
-            self.fail(err);
-    }
-
+G.electVictor = function (winningSub, dealer) {
+    // must have election lock
     var m = this.r.multi();
     m.hincrby(this.key + ':scores', winningSub.id, 1);
     var winningPlayer = PLAYERS[winningSub.id];
     if (winningPlayer)
         winningPlayer.incrementTotalScore(m);
+    var self = this;
     m.exec(function (err, rs) {
         if (err)
-            return releaseLock(err);
+            return self.releaseElectionLock(err);
         var gameScore = rs[0], totalScore = rs[1];
         var m = self.r.multi();
         m.zadd('cam:leaderboard', totalScore, winningSub.id);
         m.exec(function (err) {
             if (err)
-                return releaseLock(err);
+                return self.releaseElectionLock(err);
 
             var name;
             if (winningPlayer) {
@@ -459,22 +444,54 @@ G.gotElection = function (dealer, choice) {
 
             var phrase = common.applySubmission(self.black, winningSub, false);
             phrase.unshift(name + ' won with: ');
-            if (dealer.name)
-                phrase.push(' (picked by ' + dealer.name + ')');
+            if (dealer) {
+                dealer.send('set', {action: null});
+                if (dealer.name)
+                    phrase.push(' (picked by ' + dealer.name + ')');
+            }
             self.logMeta(phrase);
 
-            dealer.send('set', {action: null});
             self.sendAll('set', {status: name + ' won!', action: null});
-            self.sendAll('elect', {cards: choice});
+            self.sendAll('elect', {cards: winningSub.cards});
 
             // Pause for announcement (would be nice to defer this in the client instead)
             setTimeout(function () {
-                releaseLock(null);
+                self.releaseElectionLock(null);
                 self.nextDealer();
                 self.victoryAwarded();
             }, 3000);
         });
     });
+};
+
+G.electRandom = function () {
+    if (this.current != 'electing')
+        return;
+    if (this.acquireElectionLock()) {
+        var i = Math.floor(Math.random() * this.submissions.length);
+        this.electVictor(this.submissions[i], null);
+    }
+};
+
+G.acquireElectionLock = function (err) {
+    // Dumb workaround
+    // Ought to use states to do this?
+    if (this.current != 'electing' || this.electionLock)
+        return false;
+    var self = this;
+    this.electionLock = setTimeout(function () {
+        self.electionLock = 0;
+    }, 5000);
+    return true;
+};
+
+G.releaseElectionLock = function (err) {
+    if (this.electionLock) {
+        clearTimeout(this.electionLock);
+        this.electionLock = 0;
+    }
+    if (err)
+        console.error(err);
 };
 
 G.nextDealer = function () {
