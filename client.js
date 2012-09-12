@@ -131,6 +131,7 @@ var GameView = Backbone.View.extend({
 		this.model.on('change:black', this.renderBlack, this);
 		this.model.on('change:action', this.renderAction, this);
 		this.model.on('change:submissions change:blackInfo', this.renderSubmissions, this);
+		this.model.on('change:countdown', this.renderCountdown, this);
 	},
 
 	elect: function (event) {
@@ -210,6 +211,12 @@ var GameView = Backbone.View.extend({
 			fadeIns.shift().animate({opacity: 1}, {complete: showNext});
 		}
 		showNext();
+	},
+
+	renderCountdown: function () {
+		var n = this.model.get('countdown');
+		if (n && n < 11)
+			this.$('#status').text(n);
 	},
 });
 
@@ -436,7 +443,25 @@ var dispatch = {
 				$(sub.el).animate({opacity: 0});
 		});
 	},
+
+	countdown: function () {
+		if (countdownInterval) {
+			clearInterval(countdownInterval);
+			countdownInterval = 0;
+		}
+		if (this.remaining)
+			countdownInterval = setInterval(countdown, 1000);
+		game.set('countdown', this.remaining);
+	},
 };
+
+var countdownInterval = 0;
+
+function countdown() {
+	var n = game.get('countdown');
+	if (n && n > 1)
+		game.set('countdown', n-1);
+}
 
 var blinkInterval = 0;
 var normalTitle = document.title;

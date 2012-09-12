@@ -52,6 +52,7 @@ StateMachine.create({
     events: [
         {name: 'newPlayer', from: 'inactive', to: 'nominating'},
         {name: 'nominate', from: 'nominating', to: 'electing'},
+        {name: 'nominationTimeout', from: 'nominating', to: 'electing'},
         {name: 'victoryAwarded', from: 'electing', to: 'nominating'},
         {name: 'lostPlayer', from: 'nominating', to: 'electing'},
         {name: 'notEnoughPlayers', from: ['nominating', 'electing'], to: 'inactive'},
@@ -310,10 +311,40 @@ G.saveState = function () {
 
 G.onbeforenominate = function () {
     var dealer = this.getDealerPlayer();
-    return this.players.every(function (p) { return p == dealer || p.selection; });
+    var allReady = true, anyReady = false;
+    this.players.forEach(function (p) {
+        if (p.selection)
+            anyReady = true;
+        else if (p != dealer)
+            allReady = false;
+    });
+
+    if (anyReady && !this.nominationTimer) {
+        this.nomination = setTimeout(this.nominationTimeout.bind(this), common.NOMINATION_TIMEOUT*1000);
+        this.sendAll('countdown', {remaining: common.NOMINATION_TIMEOUT - 1});
+    }
+    else if (!anyReady && this.nominationTimer) {
+        clearTimeout(this.nominationTimer);
+        this.nominationTimer = 0;
+        this.sendAll('countdown', {});
+    }
+
+    return allReady;
 };
 
 G.onbeforelostPlayer = G.onbeforenominate;
+
+G.onbeforenominationTimeout = function () {
+    this.nominationTimeout = 0;
+};
+
+G.onleavenominating = function () {
+    if (this.nominationTimeout) {
+        clearTimeout(this.nominationTimeout);
+        this.nominationTimeout = 0;
+        this.sendAll('countdown', {});
+    }
+};
 
 G.onelecting = function () {
     var submissions = [], submissionIds = {};
@@ -540,8 +571,6 @@ Player.load = function (r, id, cb) {
     };
 });
 
-var TIMEOUT = 30 * 1000;
-
 P.adopt = function (client) {
     if (this.client)
         return false;
@@ -574,7 +603,7 @@ P.abandon = function () {
     var name = this.client.name;
     this.client.player = null;
     this.set({client: null});
-    this.timeout = setTimeout(this.die.bind(this), TIMEOUT);
+    this.timeout = setTimeout(this.die.bind(this), common.IDLE_TIMEOUT*1000);
 };
 
 P.die = function (err) {
@@ -739,6 +768,8 @@ P.handle_submit = function (msg) {
     var cards = msg.cards;
 
     if (!this.game || this.game.current != 'nominating')
+        return;
+    if (this.id == this.game.dealer)
         return;
 
     if (!cards || !_.isArray(cards) || !cards.length) {

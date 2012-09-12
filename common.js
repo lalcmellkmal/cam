@@ -2,10 +2,16 @@
 
 if (typeof exports == 'undefined')
     exports = window;
+else
+    _ = require('underscore');
 
-exports.USERNAME_LENGTH = 30;
-exports.MESSAGE_LENGTH = 120;
-exports.CHAT_HISTORY = 40;
+_.extend(exports, {
+    USERNAME_LENGTH: 30,
+    MESSAGE_LENGTH: 120,
+    CHAT_HISTORY: 40,
+    NOMINATION_TIMEOUT: 30,
+    IDLE_TIMEOUT: 30,
+});
 
 exports.parseBlack = function (black) {
     var info = {card: black};
