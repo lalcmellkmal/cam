@@ -92,7 +92,10 @@ G.addPlayer = function (player) {
 
     player.game = this;
     var self = this;
-    this.r.hdel(this.key + ':scores', player.id, function (err) {
+    var m = this.r.multi();
+    m.hdel(this.key + ':scores', player.id);
+    m.sadd(this.key + ':players', player.id);
+    m.exec(function (err) {
         if (err)
             return self.fail(err);
         player.set({score: 0});
@@ -142,18 +145,22 @@ G.dropPlayer = function (player) {
     player.discardHand(this.key + ':whiteDiscards', function (err) {
         if (err)
             console.error(err);
+        self.r.srem(self.key + ':players', player.id, function (err) {
+            if (err)
+                console.error(err);
 
-        player.set({game: null});
-        player.removeListener('change', self.broadcastRosterCb);
-        player.removeListener('change:selection', self.nominateCb);
-        player.removeListener('change:name', self.playerNameChangedCb);
-        player.removeAllListeners('dropped');
-        player.emit('dropComplete');
+            player.set({game: null});
+            player.removeListener('change', self.broadcastRosterCb);
+            player.removeListener('change:selection', self.nominateCb);
+            player.removeListener('change:name', self.playerNameChangedCb);
+            player.removeAllListeners('dropped');
+            player.emit('dropComplete');
 
-        if (self.players.length < MIN_PLAYERS)
-            self.notEnoughPlayers();
-        else
-            self.lostPlayer();
+            if (self.players.length < MIN_PLAYERS)
+                self.notEnoughPlayers();
+            else
+                self.lostPlayer();
+        });
     });
 };
 
@@ -948,7 +955,7 @@ function setupRound(cb) {
                     return cb("Empty black deck!");
 
                 var m = SHARED_REDIS.multi();
-                m.del(['cam:game:1:whiteDiscards', 'cam:game:1:blackDiscards', 'cam:game:1:scores']);
+                m.del(['cam:game:1:whiteDiscards', 'cam:game:1:blackDiscards', 'cam:game:1:scores', 'cam:game:1:players']);
 
                 function makeDeck(key, deck) {
                     m.del(key);
