@@ -122,7 +122,6 @@ var GameView = Backbone.View.extend({
 		var handView = new HandView({model: hand, id: 'myHand'});
 		var $roster = $('<p/>', {id: 'roster'});
 		var $submissions = $('<div/>', {id: 'submissions'});
-
 		var black = $('<li class="black"><a/></li>').hide();
 		var $chat = new ChatView({model: chat}).render().$el;
 		var $social = $('<div id=social/>').append($roster, ' ', $chat);
@@ -133,7 +132,6 @@ var GameView = Backbone.View.extend({
 		this.model.on('change:black', this.renderBlack, this);
 		this.model.on('change:action', this.renderAction, this);
 		this.model.on('change:submissions change:blackInfo', this.renderSubmissions, this);
-		this.model.on('change:countdown', this.renderCountdown, this);
 	},
 
 	elect: function (event) {
@@ -213,12 +211,6 @@ var GameView = Backbone.View.extend({
 			fadeIns.shift().animate({opacity: 1}, {complete: showNext});
 		}
 		showNext();
-	},
-
-	renderCountdown: function () {
-		var n = this.model.get('countdown');
-		if (n && n < 11)
-			this.$('#status').text(n);
 	},
 });
 
@@ -325,6 +317,7 @@ var ChatView = Backbone.View.extend({
 
 	initialize: function () {
 		var $messages = $('<div id=messages/>');
+		this.$countdown = $('<p id="countdown"/>').hide().appendTo($messages);
 		var $input = $('<input>', {maxlength: MESSAGE_LENGTH});
 		var $form = $('<form/>').append($input);
 		this.$el.append($messages, $form);
@@ -334,24 +327,32 @@ var ChatView = Backbone.View.extend({
 
 		this.model.on('add', this.addMessage, this);
 		this.model.on('reset', this.reset, this);
+
+		// bleh
+		game.on('change:countdown', this.renderCountdown, this);
 	},
 
 	reset: function () {
-		var $box = this.$('#messages');
-		$box.empty();
+		this.$countdown.detach();
+		var $box = this.$('#messages').empty();
 		for (var i = 0; i < this.model.length; i++) {
 			var view = new ChatMessageView({model: this.model.at(i)});
 			$box.append(view.render().el);
 		}
-		$box.scrollTop($box[0].scrollHeight);
+		$box.append(this.$countdown);
+		this.scrollToBottom();
 	},
 
 	addMessage: function (message) {
 		var view = new ChatMessageView({model: message});
-		var $box = this.$('#messages');
 		var $msg = view.render().$el;
-		$msg.hide().fadeIn('fast').appendTo($box);
+		$msg.hide().fadeIn('fast').insertBefore(this.$countdown);
 		this.trim();
+		this.scrollToBottom();
+	},
+
+	scrollToBottom: function () {
+		var $box = this.$('#messages');
 		$box.scrollTop($box[0].scrollHeight);
 	},
 
@@ -369,6 +370,20 @@ var ChatView = Backbone.View.extend({
 			return;
 		send('chat', {text: text});
 		$input.val('').focus();
+	},
+
+	renderCountdown: function (model, n, info) {
+		var prev = model._previousAttributes.countdown;
+		prev = (prev && prev < 11);
+		if (n && n < 11) {
+			this.$countdown.text('Ending in ' + n + '...');
+			if (!prev) {
+				this.$countdown.show();
+				this.scrollToBottom();
+			}
+		}
+		else if (prev)
+			this.$countdown.hide();
 	},
 });
 
@@ -472,7 +487,7 @@ var countdownInterval = 0;
 
 function countdown() {
 	var n = game.get('countdown');
-	if (n && n > 1)
+	if (n && n >= 1)
 		game.set('countdown', n-1);
 	else if (countdownInterval) {
 		clearInterval(countdownInterval);
