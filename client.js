@@ -125,7 +125,8 @@ var GameView = Backbone.View.extend({
 
 		var black = $('<li class="black"><a/></li>').hide();
 		var $chat = new ChatView({model: chat}).render().$el;
-		this.$el.prepend(black, $roster, $chat, $submissions).append(handView.el);
+		var $social = $('<div id=social/>').append($roster, ' ', $chat);
+		this.$el.prepend(black, $social, $submissions).append(handView.el);
 
 		this.model.on('change:status change:error', this.renderStatus, this);
 		this.model.on('change:roster', this.renderRoster, this);

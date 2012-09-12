@@ -71,13 +71,19 @@ ul {
 }
 #account {
 	float: right;
-	text-align: right;
+}
+#account #username {
+	border: 0;
+	width: 8em;
+}
+#account > input {
+	float: right;
 }
 #chat {
 	background-color: white;
 	border: 1px solid #aaa;
 	border-radius: 3px;
-	float: right;
+	float: left;
 	margin: 0.25em 0;
 	padding: 5px;
 	width: 30em;
@@ -99,15 +105,12 @@ ul {
 	color: gray;
 }
 #roster {
-	background-color: white;
-	border-radius: 5px;
-	clear: right;
-	float: right;
-	overflow: scroll;
-	margin: 0.25em 0;
-	padding: 0.5em;
+	float: left;
+	overflow: auto;
+	margin: 0.25em 0.5em;
+	padding: 0.25em;
 	text-align: right;
-	height: 13em;
+	height: 15em;
 	width: 10em;
 }
 #roster em {
@@ -127,6 +130,10 @@ ul {
 }
 #roster .spec {
 	color: #999;
+}
+#social {
+	clear: right;
+	float: right;
 }
 #status {
 	clear: both;
