@@ -682,6 +682,7 @@ P.adopt = function (client) {
     client.player = this;
     this.key = client.key;
     this.r = client.r;
+    this.ip = client.ip;
     this.set({client: client, name: client.name || 'Anonymous'});
     client.once('disconnected', this.abandon.bind(this));
 
@@ -844,6 +845,11 @@ P.handle_join = function (msg) {
         Game.load(gameId, function (err, game) {
             if (err)
                 return self.drop(err);
+
+            // xxx move this
+            if (self.ip != '127.0.0.1' && game.players.some(function (p) { return p.ip == self.ip; }))
+                return self.warn('Already playing.');
+
             self.send('set', {t: 'account', action: 'leave'});
             game.addPlayer(self);
         });

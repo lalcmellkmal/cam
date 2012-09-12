@@ -36,9 +36,23 @@ function startServer() {
 }
 
 function onConnection(conn) {
-    var client = new Client(conn);
+    var ip = conn.remoteAddress;
+    if (config.TRUST_X_FORWARDED_FOR) {
+        var ff = parseForwardedFor(conn.headers['x-forwarded-for']);
+        if (ff)
+            ip = ff;
+    }
+    var client = new Client(conn, ip);
     conn.on('data', client.onMessage.bind(client));
     conn.once('close', client.onDisconnected.bind(client));
+}
+
+function parseForwardedFor(ff) {
+    if (!ff)
+        return null;
+    if (ff.indexOf(',') >= 0)
+        ff = ff.split(',', 1)[0];
+    return ff.trim();
 }
 
 function sockJsLog(sev, msg) {
@@ -48,9 +62,10 @@ function sockJsLog(sev, msg) {
         console.log(msg);
 }
 
-function Client(sock) {
+function Client(sock, ip) {
     events.EventEmitter.call(this);
     this.sock = sock;
+    this.ip = ip;
     this.r = SHARED_REDIS;
     this.state = 'new';
     this.buffer = [];
