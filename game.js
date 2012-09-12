@@ -185,7 +185,8 @@ G.broadcastRoster = function () {
 };
 
 G.playerNameChanged = function (name, player, info) {
-    this.logMeta(info.previous + ' changed their name to ' + name + '.');
+    if (info.previous && info.previous != 'Anonymous')
+        this.logMeta(info.previous + ' changed their name to ' + name + '.');
 };
 
 G.onbeforenewPlayer = function () {
