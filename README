@@ -1,0 +1,13 @@
+Based on http://cardsagainsthumanity.com/.
+
+Deps:
+
+* node.js
+* redis
+
+NPM deps:
+
+* async
+* connect
+* redis
+* underscore
