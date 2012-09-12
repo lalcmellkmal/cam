@@ -367,24 +367,22 @@ G.anonymizedSubmissions = function () {
     });
 };
 
-G.gotElection = function (player, choice) {
+G.gotElection = function (dealer, choice) {
     if (this.current != 'electing')
-        return player.warn("Not picking right now.");
-    if (player.id != this.dealer)
-        return player.warn("You are not the dealer.");
-    var dealerName = player.name;
+        return dealer.warn("Not picking right now.");
+    if (dealer.id != this.dealer)
+        return dealer.warn("You are not the dealer.");
 
-    // Find the winner's submission
-    var winner;
+    var winningSub;
     for (var i = 0; i < this.submissions.length; i++) {
         var sub = this.submissions[i];
         if (_.isEqual(sub.cards, choice)) {
-            winner = sub;
+            winningSub = sub;
             break;
         }
     }
-    if (!winner)
-        return player.warn("Invalid choice.");
+    if (!winningSub)
+        return dealer.warn("Invalid choice.");
 
     // Dumb workaround
     // Ought to use states to do this?
@@ -406,29 +404,34 @@ G.gotElection = function (player, choice) {
     }
 
     var m = this.r.multi();
-    m.hincrby(this.key + ':scores', winner.id, 1);
-    player.incrementTotalScore(m);
+    m.hincrby(this.key + ':scores', winningSub.id, 1);
+    var winningPlayer = PLAYERS[winningSub.id];
+    if (winningPlayer)
+        winningPlayer.incrementTotalScore(m);
     m.exec(function (err, rs) {
         if (err)
             return releaseLock(err);
         var gameScore = rs[0], totalScore = rs[1];
         var m = self.r.multi();
-        m.zadd('cam:leaderboard', totalScore, winner.id);
+        m.zadd('cam:leaderboard', totalScore, winningSub.id);
         m.exec(function (err) {
             if (err)
                 return releaseLock(err);
 
-            var player = PLAYERS[winner.id];
-            if (player)
-                player.set({score: gameScore});
+            var name;
+            if (winningPlayer) {
+                winningPlayer.set({score: gameScore});
+                name = winningPlayer.name;
+            }
+            name = name || '<gone>';
 
-            var name = (player && player.name) || '<gone>';
-            var phrase = common.applySubmission(self.black, winner, false);
+            var phrase = common.applySubmission(self.black, winningSub, false);
             phrase.unshift(name + ' won with: ');
-            if (dealerName)
-                phrase.push(' (picked by ' + dealerName + ')');
+            if (dealer.name)
+                phrase.push(' (picked by ' + dealer.name + ')');
             self.logMeta(phrase);
 
+            dealer.send('set', {action: null});
             self.sendAll('set', {status: name + ' won!', action: null});
             self.sendAll('elect', {cards: choice});
 
