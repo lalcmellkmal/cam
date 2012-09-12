@@ -160,7 +160,7 @@ var GameView = Backbone.View.extend({
 				class: player.kind,
 			});
 			if (player.score)
-				$a.append(' ', $('<em/>', {text: '('+player.score+')'}));
+				$a.append('&nbsp;', $('<em/>', {text: '('+player.score+')'}));
 			if (player.ready)
 				$a.addClass('ready');
 			if (player.idle)
@@ -522,7 +522,7 @@ function suggestionBox() {
 	var $label = $('<label for=suggestion>Suggest a card:</label>');
 	var $sug = $('<input id=suggestion maxlength=200>');
 	var $thanks = $('<span>Thanks!</span>').css({opacity: 0});
-	var $box = $('<form id=suggestions/>').append($label, ' ', $sug, ' ', $thanks);
+	var $box = $('<form id=suggestions/>').append($label, ' ', $sug, '<br>', $thanks);
 	$box.on('submit', function (event) {
 		event.preventDefault();
 		var card = $sug.val().trim();
