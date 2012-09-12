@@ -138,6 +138,7 @@ G.dropPlayer = function (player) {
         player.removeListener('change', self.broadcastRosterCb);
         player.removeListener('change:selection', self.nominateCb);
         player.removeAllListeners('dropped');
+        player.emit('dropComplete');
 
         if (self.players.length < MIN_PLAYERS)
             self.notEnoughPlayers();
@@ -575,9 +576,9 @@ P.adopt = function (client) {
     if (this.client)
         return false;
 
-    if (this.timeout) {
-        clearTimeout(this.timeout);
-        this.timeout = 0;
+    if (this.idleTimeout) {
+        clearTimeout(this.idleTimeout);
+        this.idleTimeout = 0;
     }
     client.player = this;
     this.key = client.key;
@@ -603,16 +604,22 @@ P.abandon = function () {
     var name = this.client.name;
     this.client.player = null;
     this.set({client: null});
-    this.timeout = setTimeout(this.die.bind(this), common.IDLE_TIMEOUT*1000);
+    this.idleTimeout = setTimeout(this.sudoku.bind(this), common.IDLE_TIMEOUT*1000);
 };
 
-P.die = function (err) {
-    this.emit('dropped');
+P.sudoku = function () {
+    if (this.game) {
+        // ugh
+        this.once('dropComplete', this.cleanUp.bind(this));
+        this.emit('dropped');
+    }
+    else
+        this.cleanUp();
+};
 
-    this.game = null;
+P.cleanUp = function () {
     this.key = null;
     this.r = null;
-
     this.removeAllListeners();
     delete PLAYERS[this.id];
 };
