@@ -394,6 +394,8 @@ G.onelecting = function () {
                 setTimeout(player.dealHand.bind(player, false), 2000);
             });
             self.set({submissions: submissions});
+            if (submissions.length == 1)
+                setTimeout(self.electRandom.bind(self), 1000);
         });
     });
 };
