@@ -98,7 +98,10 @@ ul {
 #roster {
 	clear: right;
 	float: right;
+	overflow: scroll;
+	padding: 0.5em;
 	text-align: right;
+	height: 13em;
 }
 #roster em {
 	font-style: normal;
