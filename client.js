@@ -430,6 +430,7 @@ var dispatch = {
 		});
 		if (final)
 			hand.remove(targets);
+		game.set({selectionConfirmed: this.cards.length && !final});
 	},
 
 	elect: function () {
@@ -475,16 +476,19 @@ function onFocus() {
 	if (blinkInterval)
 		clearInterval(blinkInterval);
 	blinkInterval = 0;
-	game.off('change:action', actionChangeWhileBlurred);
+	game.off('change:action change:selectionConfirmed', actionChangeWhileBlurred);
 }
 
 function onBlur() {
-	game.on('change:action', actionChangeWhileBlurred);
+	game.on('change:action change:selectionConfirmed', actionChangeWhileBlurred);
 	actionChangeWhileBlurred();
 }
 
 function actionChangeWhileBlurred() {
-	if (!game.get('action')) {
+	var actionNeeded = game.get('action');
+	if (actionNeeded == 'nominate')
+		actionNeeded = !game.get('selectionConfirmed');
+	if (!actionNeeded) {
 		if (blinkInterval)
 			clearInterval(blinkInterval);
 		blinkInterval = 0;
