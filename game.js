@@ -434,8 +434,8 @@ G.setupElectionTimer = function () {
         return;
     var delay = 1000;
     if (subs.length > 1) {
-        delay = common.NOMINATION_TIMEOUT*1000;
-        this.sendAll('countdown', {remaining: common.NOMINATION_TIMEOUT - 1});
+        delay = common.ELECTION_TIMEOUT*1000;
+        this.sendAll('countdown', {remaining: common.ELECTION_TIMEOUT - 1});
     }
     var self = this;
     this.electionTimer = setTimeout(function () {

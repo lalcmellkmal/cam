@@ -10,6 +10,7 @@ _.extend(exports, {
     MESSAGE_LENGTH: 120,
     CHAT_HISTORY: 40,
     NOMINATION_TIMEOUT: 30,
+    ELECTION_TIMEOUT: 40,
     IDLE_TIMEOUT: 30,
 });
 
