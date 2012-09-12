@@ -8,7 +8,7 @@ var _ = require('underscore'),
 
 var HAND_SIZE = 8;
 var MIN_PLAYERS = 3;
-var MAX_PLAYERS = 10;
+var MAX_PLAYERS = 20;
 var MESSAGE_RATE = 7;
 
 var GAMES = {};
