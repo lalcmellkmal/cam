@@ -473,6 +473,7 @@ G.electVictor = function (winningSub, dealer) {
     if (this.electionTimer) {
         clearTimeout(this.electionTimer);
         this.electionTimer = 0;
+        this.sendAll('countdown', {});
     }
 
     var m = this.r.multi();
