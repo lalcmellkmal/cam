@@ -52,7 +52,7 @@ StateMachine.create({
     events: [
         {name: 'newPlayer', from: 'inactive', to: 'nominating'},
         {name: 'nominate', from: 'nominating', to: 'electing'},
-        {name: 'nominationTimeout', from: 'nominating', to: 'electing'},
+        {name: 'nominationTimedOut', from: 'nominating', to: 'electing'},
         {name: 'victoryAwarded', from: 'electing', to: 'nominating'},
         {name: 'lostPlayer', from: 'nominating', to: 'electing'},
         {name: 'notEnoughPlayers', from: ['nominating', 'electing'], to: 'inactive'},
@@ -321,7 +321,7 @@ G.onbeforenominate = function () {
     });
 
     if (anyReady && !this.nominationTimer) {
-        this.nomination = setTimeout(this.nominationTimeout.bind(this), common.NOMINATION_TIMEOUT*1000);
+        this.nominationTimer = setTimeout(this.nominationTimedOut.bind(this), common.NOMINATION_TIMEOUT*1000);
         this.sendAll('countdown', {remaining: common.NOMINATION_TIMEOUT - 1});
     }
     else if (!anyReady && this.nominationTimer) {
@@ -335,14 +335,14 @@ G.onbeforenominate = function () {
 
 G.onbeforelostPlayer = G.onbeforenominate;
 
-G.onbeforenominationTimeout = function () {
-    this.nominationTimeout = 0;
+G.onbeforenominationTimedOut = function () {
+    this.nominationTimer = 0;
 };
 
 G.onleavenominating = function () {
-    if (this.nominationTimeout) {
-        clearTimeout(this.nominationTimeout);
-        this.nominationTimeout = 0;
+    if (this.nominationTimer) {
+        clearTimeout(this.nominationTimer);
+        this.nominationTimer = 0;
         this.sendAll('countdown', {});
     }
 };
