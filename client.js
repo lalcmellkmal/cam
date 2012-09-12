@@ -438,11 +438,49 @@ var dispatch = {
 	},
 };
 
+var blinkInterval = 0;
+var normalTitle = document.title;
+
+function onFocus() {
+	document.title = normalTitle;
+	if (blinkInterval)
+		clearInterval(blinkInterval);
+	blinkInterval = 0;
+	game.off('change:action', actionChangeWhileBlurred);
+}
+
+function onBlur() {
+	game.on('change:action', actionChangeWhileBlurred);
+	actionChangeWhileBlurred();
+}
+
+function actionChangeWhileBlurred() {
+	if (!game.get('action')) {
+		if (blinkInterval)
+			clearInterval(blinkInterval);
+		blinkInterval = 0;
+		document.title = normalTitle;
+	}
+	else if (!blinkInterval) {
+		blinkTitle();
+		blinkInterval = setInterval(blinkTitle, 1000);
+	}
+}
+
+function blinkTitle() {
+	if (document.title.match(/^\(!\)/))
+		document.title = '( ) ' + normalTitle;
+	else
+		document.title = '(!) ' + normalTitle;
+}
+
 $(function () {
 	var $game = $('#game');
 	new AccountView({model: account}).render().$el.insertBefore($game);
 	new ChatView({model: chat}).render().$el.insertAfter($game);
 	var gameView = new GameView({model: game, el: $game[0]});
+	window.addEventListener('focus', onFocus, false);
+	window.addEventListener('blur', onBlur, false);
 });
 
 })();
