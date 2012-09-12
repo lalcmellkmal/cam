@@ -646,6 +646,7 @@ P.adopt = function (client) {
                 self.drop(err);
             self.game.sendState(self);
             self.game.sendMessageHistory(self);
+            self.send('set', {t: 'account', action: 'leave'});
         });
     }
     else
