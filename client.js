@@ -461,6 +461,10 @@ function countdown() {
 	var n = game.get('countdown');
 	if (n && n > 1)
 		game.set('countdown', n-1);
+	else if (countdownInterval) {
+		clearInterval(countdownInterval);
+		countdownInterval = 0;
+	}
 }
 
 var blinkInterval = 0;

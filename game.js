@@ -34,6 +34,8 @@ function Game() {
     this.on('change:black', changed);
     this.on('change:dealer', changed);
     this.on('change:submissions', changed);
+
+    this.on('change:submissions', this.setupElectionTimer.bind(this));
 }
 util.inherits(Game, Model);
 exports.Game = Game;
@@ -394,10 +396,24 @@ G.onelecting = function () {
                 setTimeout(player.dealHand.bind(player, false), 2000);
             });
             self.set({submissions: submissions});
-            if (submissions.length == 1)
-                setTimeout(self.electRandom.bind(self), 1000);
         });
     });
+};
+
+G.setupElectionTimer = function () {
+    var subs = this.submissions;
+    if (this.current != 'electing' || !subs)
+        return;
+    var delay = 1000;
+    if (subs.length > 1) {
+        delay = common.NOMINATION_TIMEOUT*1000;
+        this.sendAll('countdown', {remaining: common.NOMINATION_TIMEOUT - 1});
+    }
+    var self = this;
+    this.electionTimer = setTimeout(function () {
+        self.electionTimer = 0;
+        self.electRandom();
+    }, delay);
 };
 
 G.anonymizedSubmissions = function () {
@@ -425,6 +441,12 @@ G.gotElection = function (dealer, choice) {
 
 G.electVictor = function (winningSub, dealer) {
     // must have election lock
+
+    if (this.electionTimer) {
+        clearTimeout(this.electionTimer);
+        this.electionTimer = 0;
+    }
+
     var m = this.r.multi();
     m.hincrby(this.key + ':scores', winningSub.id, 1);
     var winningPlayer = PLAYERS[winningSub.id];
