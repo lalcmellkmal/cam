@@ -245,14 +245,24 @@ var AccountView = Backbone.View.extend({
 		this.model.on('change', this.render, this);
 		var $join = $('<input type=button id=join value="Join game">').hide();
 		var $leave = $('<input type=button id=leave value="Leave game">').hide();
-		this.$el.append('<form><input id=username maxlength='+USERNAME_LENGTH+'> <input type=submit value="Set name"></form>', $join, $leave);
+		var $gameFull = $('<input type=button id=gameFull value="Game full" disabled>').hide();
+		this.$el.append('<form><input id=username maxlength='+USERNAME_LENGTH+'> <input type=submit value="Set name"></form>', $join, $leave, $gameFull);
 	},
 
 	render: function () {
 		var attrs = this.model.attributes;
 		this.$('#username').val(attrs.name || '');
-		this.$('#join').toggle(attrs.action == 'join');
-		this.$('#leave').toggle(attrs.action == 'leave');
+		var action = attrs.action;
+		this.$('#join').toggle(action == 'join');
+		this.$('#leave').toggle(action == 'leave');
+		this.$('#gameFull').toggle(action == 'gameFull');
+		if (action == 'gameFull') {
+			var model = this.model;
+			setTimeout(function () {
+				if (model.get('action') == 'gameFull')
+					model.set({action: 'join'});
+			}, 1500);
+		}
 		return this;
 	},
 

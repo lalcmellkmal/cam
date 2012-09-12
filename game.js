@@ -8,6 +8,7 @@ var _ = require('underscore'),
 
 var HAND_SIZE = 8;
 var MIN_PLAYERS = 3;
+var MAX_PLAYERS = 10;
 
 var GAMES = {};
 var PLAYERS = {};
@@ -86,6 +87,8 @@ G.removeSpec = function (client) {
 G.addPlayer = function (player) {
     if (this.players.indexOf(player) >= 0)
         return this.warn('Already playing.');
+    if (this.players.length >= MAX_PLAYERS)
+        return player.send('set', {t: 'account', action: 'gameFull'});
 
     player.game = this;
     var self = this;
