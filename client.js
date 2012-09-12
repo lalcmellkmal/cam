@@ -517,9 +517,30 @@ function blinkTitle() {
 		document.title = '(!) ' + normalTitle;
 }
 
+function suggestionBox() {
+	var $label = $('<label for=suggestion>Suggest a card:</label>');
+	var $sug = $('<input id=suggestion maxlength=200>');
+	var $thanks = $('<span>Thanks!</span>').css({opacity: 0});
+	var $box = $('<form id=suggestions/>').append($label, ' ', $sug, ' ', $thanks);
+	$box.on('submit', function (event) {
+		event.preventDefault();
+		var card = $sug.val().trim();
+		if (card) {
+			send('suggest', {card: card});
+			$thanks.css({opacity: 1});
+			setTimeout(function () {
+				$thanks.animate({opacity: 0});
+			}, 500);
+		}
+		$sug.val('').focus();
+	});
+	return $box;
+}
+
 $(function () {
 	var $game = $('#game');
 	new AccountView({model: account}).render().$el.insertBefore($game);
+	suggestionBox().insertAfter($game);
 	new ChatView({model: chat}).render().$el.insertAfter($game);
 	var gameView = new GameView({model: game, el: $game[0]});
 	window.addEventListener('focus', onFocus, false);

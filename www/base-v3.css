@@ -158,3 +158,8 @@ ul {
 #submissions.electing a:hover {
 	border-color: white;
 }
+#suggestions {
+	text-align: right;
+	color: gray;
+	size: small;
+}

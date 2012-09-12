@@ -17,6 +17,7 @@ game.setRedis(SHARED_REDIS);
 function startServer() {                                                       
     var app = connect.createServer();
     app.use(serveScripts);
+    app.use(serveSuggestions);
     app.use(connect.static(__dirname + '/www', {maxAge: 2592000000}));
     app.on('upgrade', function (req, resp) {
         resp.end();
@@ -260,6 +261,35 @@ C.handle_chat = function (msg) {
     this.game.chat(this, msg);
 };
 
+C.handle_suggest = function (msg) {
+    var card = msg.card;
+    if (typeof card != 'string')
+        return;
+    card = card.trim().replace(/\s+/g, ' ').slice(0, 200).toLowerCase();
+    if (card)
+        this.r.zincrby('cam:suggestions', 1, card);
+};
+
+function serveSuggestions(req, resp, next) {
+    var url = urlParse(req.url, true);
+    if (url.pathname.match(/^\/suggestions\/?$/)) {
+        resp.writeHead(200, noCacheHeaders);
+        resp.write('<!doctype html><meta charset=utf8><title>Suggestions</title>\n');
+        SHARED_REDIS.zrevrange('cam:suggestions', 0, -1, 'withscores', function (err, suggestions) {
+            if (err)
+                return console.error(err);
+            for (var i = 0; i < suggestions.length; i += 2) {
+                var card = connect.utils.escape(suggestions[i]);
+                var count = parseInt(suggestions[i+1], 10);
+                resp.write(card + (count > 1 ? ' (' + count + ')' : '') + '<br>');
+            }
+            resp.end();
+        });
+        return;
+    }
+    next();
+}
+
 C.warn = function (msg) {
     console.warn(this.name + ': ' + msg);
     if (typeof msg == 'string')
@@ -286,9 +316,7 @@ var SCRIPTS;
 function serveScripts(req, resp, next) {
     var url = urlParse(req.url, true);
     if (url.pathname == '/') {
-        resp.writeHead(200, {'Content-Type': 'text/html; charset=UTF-8',
-                Expires: 'Thu, 01 Jan 1970 00:00:00 GMT',
-                'Cache-Control': 'no-cache'});
+        resp.writeHead(200, noCacheHeaders);
         resp.end(SCRIPTS.indexHtml);
         return;
     }
@@ -300,6 +328,10 @@ function serveScripts(req, resp, next) {
     }
     next();
 }
+
+var noCacheHeaders = {'Content-Type': 'text/html; charset=UTF-8',
+                      Expires: 'Thu, 01 Jan 1970 00:00:00 GMT',
+                      'Cache-Control': 'no-cache'};
 
 if (require.main === module) {
     assets.buildScripts(function (err, scripts) {
