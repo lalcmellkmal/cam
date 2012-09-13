@@ -9,7 +9,7 @@ var _ = require('underscore'),
 var HAND_SIZE = 8;
 var MIN_PLAYERS = 3;
 var MAX_PLAYERS = 20;
-var ROUND_POINTS = 10;
+var ROUND_POINTS = 5;
 var MESSAGE_RATE = 7;
 
 var GAMES = {};
@@ -353,8 +353,11 @@ G.onbeforenominate = function () {
     });
 
     if (anyReady && !this.nominationTimer) {
-        this.nominationTimer = setTimeout(this.nominationTimedOut.bind(this), common.NOMINATION_TIMEOUT*1000);
-        this.sendAll('countdown', {remaining: common.NOMINATION_TIMEOUT - 1});
+        var timeout = common.NOMINATION_TIMEOUT;
+        if (this.black && this.black.blankCount > 1)
+            timeout += 5;
+        this.nominationTimer = setTimeout(this.nominationTimedOut.bind(this), timeout*1000);
+        this.sendAll('countdown', {remaining: timeout - 1});
     }
     else if (!anyReady && this.nominationTimer) {
         clearTimeout(this.nominationTimer);
