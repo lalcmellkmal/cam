@@ -276,6 +276,7 @@ G.oninactive = function (event, from, to) {
     this.r.hmset(this.key, {state: 'inactive', black: null}, function (err) {
         if (err)
             return self.fail(err);
+        self.set({black: null});
         self.broadcastState();
     });
 };
