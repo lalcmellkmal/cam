@@ -16,6 +16,7 @@ var TIMEOUTS = {
     nomination: 25,
     election: 40,
     abandoned: 30, // clientless
+    afk: 10*60, // no actions
 };
 
 var GAMES = {};
@@ -268,11 +269,20 @@ G.getDealerPlayer = function () {
 };
 
 G.oninactive = function (event, from, to) {
+    this.players.forEach(function (player) {
+        player.clearAfk();
+    });
     var self = this;
     this.r.hmset(this.key, {state: 'inactive', black: null}, function (err) {
         if (err)
             return self.fail(err);
         self.broadcastState();
+    });
+};
+
+G.onleaveinactive = function () {
+    this.players.forEach(function (player) {
+        player.resetAfk();
     });
 };
 
@@ -899,6 +909,8 @@ P.handle_join = function (msg) {
                 return self.warn('Already playing.');
 
             self.send('set', {t: 'account', action: 'leave'});
+            if (game.current != 'inactive')
+                self.resetAfk();
             game.addPlayer(self);
         });
     });
@@ -917,6 +929,7 @@ P.handle_leave = function (msg) {
             sameGame.addSpec(self.client);
         self.send('set', {t: 'account', action: 'join'});
         self.send('reset', {t: 'hand', objs: []});
+        self.clearAfk();
     });
 };
 
@@ -947,6 +960,7 @@ P.handle_submit = function (msg) {
 
     this.set({selection: msg.cards});
     this.remindSubmission();
+    this.resetAfk();
 };
 
 P.remindSubmission = function () {
@@ -999,6 +1013,25 @@ P.handle_elect = function (msg) {
         return this.drop('Bad selection!');
     if (this.game)
         this.game.gotElection(this, cards);
+    this.resetAfk();
+};
+
+P.resetAfk = function () {
+    this.clearAfk();
+    this.afkTimeout = setTimeout(this.afk.bind(this), TIMEOUTS.afk*1000);
+};
+
+P.clearAfk = function () {
+    if (this.afkTimeout)
+        clearTimeout(this.afkTimeout);
+};
+
+P.afk = function () {
+    this.afkTimeout = 0;
+    if (!this.game)
+        return;
+    this.game.logMeta(this.name + ' was dropped for being idle.');
+    this.handle_leave({});
 };
 
 function loadDeck(filename, dest, cb) {
