@@ -162,8 +162,8 @@ var GameView = Backbone.View.extend({
 				$a.append('&nbsp;', $('<em/>', {text: '('+player.score+')'}));
 			if (player.ready)
 				$a.addClass('ready');
-			if (player.idle)
-				$a.addClass('idle');
+			if (player.abandoned)
+				$a.addClass('abandoned');
 			$list.append($a, '<br>');
 		});
 	},

@@ -9,9 +9,6 @@ _.extend(exports, {
     USERNAME_LENGTH: 15,
     MESSAGE_LENGTH: 120,
     CHAT_HISTORY: 40,
-    NOMINATION_TIMEOUT: 25,
-    ELECTION_TIMEOUT: 40,
-    IDLE_TIMEOUT: 30,
 });
 
 exports.parseBlack = function (black) {

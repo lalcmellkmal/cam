@@ -120,7 +120,7 @@ ul {
 #roster .dealer {
 	font-weight: bold;
 }
-#roster .idle {
+#roster .abandoned {
 	text-decoration: line-through;
 }
 #roster .ready {

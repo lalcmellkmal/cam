@@ -12,6 +12,12 @@ var MAX_PLAYERS = 20;
 var ROUND_POINTS = 5;
 var MESSAGE_RATE = 7;
 
+var TIMEOUTS = {
+    nomination: 25,
+    election: 40,
+    abandoned: 30, // clientless
+};
+
 var GAMES = {};
 var PLAYERS = {};
 
@@ -353,7 +359,7 @@ G.onbeforenominate = function () {
     });
 
     if (anyReady && !this.nominationTimer) {
-        var timeout = common.NOMINATION_TIMEOUT;
+        var timeout = TIMEOUTS.nomination;
         if (this.black && this.black.blankCount > 1)
             timeout += 5;
         this.nominationTimer = setTimeout(this.nominationTimedOut.bind(this), timeout*1000);
@@ -437,8 +443,8 @@ G.setupElectionTimer = function () {
         return;
     var delay = 1000;
     if (subs.length > 1) {
-        delay = common.ELECTION_TIMEOUT*1000;
-        this.sendAll('countdown', {remaining: common.ELECTION_TIMEOUT - 1});
+        delay = TIMEOUTS.election * 1000;
+        this.sendAll('countdown', {remaining: TIMEOUTS.election - 1});
     }
     var self = this;
     this.electionTimer = setTimeout(function () {
@@ -719,9 +725,9 @@ P.adopt = function (client) {
     if (this.client)
         return false;
 
-    if (this.idleTimeout) {
-        clearTimeout(this.idleTimeout);
-        this.idleTimeout = 0;
+    if (this.abandonedTimeout) {
+        clearTimeout(this.abandonedTimeout);
+        this.abandonedTimeout = 0;
     }
     client.player = this;
     this.key = client.key;
@@ -749,7 +755,7 @@ P.abandon = function () {
     var name = this.client.name;
     this.client.player = null;
     this.set({client: null});
-    this.idleTimeout = setTimeout(this.sudoku.bind(this), common.IDLE_TIMEOUT*1000);
+    this.abandonedTimeout = setTimeout(this.sudoku.bind(this), TIMEOUTS.abandoned*1000);
 };
 
 P.sudoku = function () {
@@ -774,7 +780,7 @@ P.toJSON = function () {
     if (this.selection)
         json.ready = true;
     if (!this.client)
-        json.idle = true;
+        json.abandoned = true;
     return json;
 };
 
