@@ -139,3 +139,4 @@ Misunderstandings.
 Homeroom.
 Rankings.
 Anime physics.
+"S"-ranking things.
