@@ -1,4 +1,5 @@
 # AZUMANGA
+Chiyo in a penguin suit.
 Nekoconeko.
 Iriomote mountain cats.
 Sata andagi.
@@ -9,16 +10,20 @@ Platinum mad.
 Suruga monkey.
 # CHIHAYAFURU
 Competitive karuta.
-The Hundred Poems.
 # CODE GEASS
 Geass.
 Loyalty.
 Pizza Butt.
+# DEATH NOTE
+Killing people by writing their names down.
+Kira.
 # EVA
 Omedetou.
 Everything turning into Tang®.
 Gendo interlacing his fingers.
 The Human Instrumentality Project.
+LCL in your lungs.
+Kaworu.
 My AT field.
 Pen-pen.
 Plugsuits.
@@ -45,6 +50,7 @@ The Melancholy.
 # HIDAMARI
 The Hidamari Apartments.
 That episode of Hidamari Sketch where Yuno has a fever.
+Ume-sensei.
 Wideface.
 # IKA
 Endless torrents of squid ink.
@@ -57,6 +63,9 @@ Gitah.
 Gamburu.
 Kaiji-kun.
 Zawa zawa.
+# HAIYORE!
+Nyarlathotep.
+Space CQC.
 # MADOKA
 The Madonka-donks.
 Headless Mami.
@@ -100,6 +109,10 @@ Curry eaten with those you love.
 DESTINY.
 IMAGIIINE!
 The Penguindrum.
+# POKEMON
+Ash's Pikachu.
+Catching 'Em All.
+Gary Oak.
 # RAILDEX
 Accelerator.
 Fukou da.
@@ -142,6 +155,7 @@ A girl who can only see things in a positive light.
 The Anti-Spirals.
 Gattai.
 My drill.
+Nia's eyes.
 Giga Drill Breaker.
 Spirals.
 # WORKING!
@@ -169,7 +183,6 @@ Dango.
 The Gate.
 103,000 magical tomes.
 900,666 magical tomes.
-Nyarlathotep.
 Deculture!
 Grave of the Fireflies.
 KANEDAAAAA!
@@ -201,7 +214,6 @@ Lolis with guns.
 Mysteltainn.
 Multi-track drifting.
 Yotsuba.
-Killing people by writing their names down.
 Cancer crystals.
 Living under a bridge.
 The heart.
@@ -223,3 +235,10 @@ My love, my anger, and all of my sorrow.
 Nipah!
 Shining Finger.
 This chair.
+Dollars.
+Kininarimasu!
+Excalibur.
+Shonen Bat.
+Immelmann Turn.
+Garbage collection in space.
+Impractical ninja outfits.
