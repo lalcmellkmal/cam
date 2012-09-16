@@ -156,7 +156,7 @@ G.dropPlayer = function (player) {
         else
             newDealer = null; // state should change for us
         this.set({dealer: newDealer});
-        this.electRandom();
+        this.electRandom(true);
     }
 
     var self = this;
@@ -432,7 +432,7 @@ G.onelecting = function () {
             return self.fail(err);
         else if (!submissions.length) {
             self.logMeta("For some reason, no one wins.");
-            self.nextNominations();
+            self.nextNominations(false);
             return;
         }
         shuffle(submissions);
@@ -469,7 +469,7 @@ G.setupElectionTimer = function () {
     var self = this;
     this.electionTimer = setTimeout(function () {
         self.electionTimer = 0;
-        self.electRandom();
+        self.electRandom(false);
     }, delay);
 };
 
@@ -489,14 +489,14 @@ G.gotElection = function (dealer, choice) {
         var sub = this.submissions[i];
         if (_.isEqual(sub.cards, choice)) {
             if (this.acquireElectionLock())
-                this.electVictor(sub, dealer);
+                this.electVictor(sub, dealer, false);
             return;
         }
     }
     dealer.warn("Invalid choice.");
 };
 
-G.electVictor = function (winningSub, dealer) {
+G.electVictor = function (winningSub, dealer, keepDealer) {
     // must have election lock
 
     if (this.electionTimer) {
@@ -544,7 +544,7 @@ G.electVictor = function (winningSub, dealer) {
             setTimeout(function () {
                 self.releaseElectionLock(null);
                 if (gameScore < ROUND_POINTS)
-                    self.nextNominations();
+                    self.nextNominations(keepDealer);
                 else
                     self.roundOver(name);
             }, 3000);
@@ -552,8 +552,9 @@ G.electVictor = function (winningSub, dealer) {
     });
 };
 
-G.nextNominations = function () {
-    this.nextDealer();
+G.nextNominations = function (keepDealer) {
+    if (!keepDealer)
+        this.nextDealer();
     this.victoryAwarded();
 };
 
@@ -585,18 +586,18 @@ G.roundOver = function (winner) {
             self.r.del(self.key + ':scores', function (err) {
                 if (err)
                     return self.fail(err);
-                self.nextNominations();
+                self.nextNominations(false);
             });
         }, 10 * 1000);
     });
 };
 
-G.electRandom = function () {
+G.electRandom = function (keepDealer) {
     if (this.current != 'electing')
         return;
     if (this.acquireElectionLock()) {
         var i = Math.floor(Math.random() * this.submissions.length);
-        this.electVictor(this.submissions[i], null);
+        this.electVictor(this.submissions[i], null, keepDealer);
     }
 };
 
