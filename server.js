@@ -183,7 +183,7 @@ C.loadUser = function (id) {
                 alreadyPlaying = player.isPlaying();
 
             if (!alreadyPlaying) {
-                self.watchGame(1, function (err) {
+                self.watchGame(config.GAME_ID, function (err) {
                     if (err)
                         return self.drop(err);
                 });
@@ -337,7 +337,7 @@ if (require.main === module) {
     assets.buildScripts(function (err, scripts) {
         if (err) throw err;
         SCRIPTS = scripts;
-        game.setupRound(function (err) {
+        game.setupRound(config.GAME_ID, function (err) {
             if (err) throw err;
             startServer();
         });

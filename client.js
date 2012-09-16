@@ -261,7 +261,7 @@ var AccountView = Backbone.View.extend({
 	},
 
 	joinGame: function () {
-		send('join', {});
+		send('join', {game: ''+GAME_ID});
 		this.model.set({action: null});
 	},
 

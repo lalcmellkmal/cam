@@ -23,6 +23,7 @@ exports.buildScripts = function (cb) {
                 return cb(err);
             var html = indexTmpl.replace('$CLIENT', clientJsPath);
             html = html.replace('$SOCKJS_URL', JSON.stringify(config.SOCKJS_URL));
+            html = html.replace('$GAME_ID', JSON.stringify(config.GAME_ID));
             scriptInfo.indexHtml = new Buffer(html, 'UTF-8');
             cb(null, scriptInfo);
         });

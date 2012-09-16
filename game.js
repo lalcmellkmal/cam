@@ -7,9 +7,9 @@ var _ = require('underscore'),
     util = require('util');
 
 var HAND_SIZE = 8;
-var MIN_PLAYERS = 3;
+var MIN_PLAYERS = 2;
 var MAX_PLAYERS = 20;
-var ROUND_POINTS = 5;
+var ROUND_POINTS = 2;
 var MESSAGE_RATE = 7;
 
 var TIMEOUTS = {
@@ -25,12 +25,12 @@ var PLAYERS = {};
 var SHARED_REDIS;
 exports.setRedis = function (r) { SHARED_REDIS = r; };
 
-function Game() {
+function Game(id) {
     Model.call(this);
 
     this.r = SHARED_REDIS;
-    this.id = 1;
-    this.key = 'cam:game:1';
+    this.id = id;
+    this.key = 'cam:game:' + id;
     this.dealer = null;
     this.players = [];
     this.specs = [];
@@ -54,7 +54,7 @@ exports.Game = Game;
 
 Game.load = function (id, cb) {
     if (!(id in GAMES))
-        GAMES[id] = new Game;
+        GAMES[id] = new Game(id);
     cb(null, GAMES[id]);
 };
 
@@ -894,7 +894,9 @@ P.incrementTotalScore = function (m) {
 };
 
 P.handle_join = function (msg) {
-    var gameId = 1;
+    if (typeof msg.game != 'string' || !msg.game.match(/^\d+$/))
+        return false;
+    var gameId = parseInt(msg.game, 10);
     var self = this;
     this.r.hget(this.key, 'game', function (err, existing) {
         if (err)
@@ -1048,7 +1050,7 @@ function loadDeck(filename, dest, cb) {
     });
 }
 
-function setupRound(cb) {
+function setupRound(gameId, cb) {
     fs.readdir('sets', function (err, sets) {
         if (err)
             return cb(err);
@@ -1079,14 +1081,15 @@ function setupRound(cb) {
                     return cb("Empty black deck!");
 
                 var m = SHARED_REDIS.multi();
-                m.del(['cam:game:1:whiteDiscards', 'cam:game:1:blackDiscards', 'cam:game:1:scores', 'cam:game:1:players']);
+                var key = 'cam:game:' + gameId;
+                m.del([key+':whiteDiscards', key+':blackDiscards', key+':scores', key+':players']);
 
-                function makeDeck(key, deck) {
-                    m.del(key);
-                    m.sadd(key, _.uniq(deck));
+                function makeDeck(k, deck) {
+                    m.del(k);
+                    m.sadd(k, _.uniq(deck));
                 }
-                makeDeck('cam:game:1:whites', whites);
-                makeDeck('cam:game:1:blacks', blacks);
+                makeDeck(key+':whites', whites);
+                makeDeck(key+':blacks', blacks);
 
                 m.exec(cb);
             });
