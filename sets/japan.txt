@@ -1,6 +1,5 @@
 2ch.
 BOSS coffee.
-Shinto gods.
 The Japan Self-Defense Forces.
 Pearl Harbor.
 Hiroshima.
@@ -10,10 +9,10 @@ Cirno.
 Reimu.
 Holding Shift for focused movement.
 Danmaku.
-Miko.
 Shinto sacred cleansing rituals.
 Onee-sama.
 Onii-chan.
+Obaa-chan.
 The Shinkansen.
 Host clubs.
 Hostess bars.
@@ -62,6 +61,7 @@ Ten thousand yen.
 M-Masaka...!
 Kotatsu.
 Tanasinn.
+Tenshi's corndog.
 Shift-JIS art.
 Tokyo Tower.
 Fish markets.
@@ -78,3 +78,6 @@ Drinking warm sake.
 Chopsticks.
 Koi-koi!
 Cleaning hardwood floors by wiping at a run.
+Tokyo U.
+Yamato-damashii.
+Pon pon wei wei wei.
