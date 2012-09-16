@@ -7,9 +7,9 @@ var _ = require('underscore'),
     util = require('util');
 
 var HAND_SIZE = 8;
-var MIN_PLAYERS = 2;
+var MIN_PLAYERS = 3;
 var MAX_PLAYERS = 20;
-var ROUND_POINTS = 2;
+var ROUND_POINTS = 5;
 var MESSAGE_RATE = 7;
 
 var TIMEOUTS = {
