@@ -174,13 +174,15 @@ C.loadUser = function (id) {
             return self.drop(err);
         self.name = name || null;
         self.send('set', {t: 'account', name: name});
-        game.Player.load(self.r, self.id, function (err, player) {
+        game.Player.load(self.id, function (err, player) {
             if (err)
                 self.drop(err);
 
             var alreadyPlaying = false;
             if (player.adopt(self))
                 alreadyPlaying = player.isPlaying();
+            else
+                self.send('set', {t: 'account', action: 'alreadyConnected'});
 
             if (!alreadyPlaying) {
                 self.watchGame(config.GAME_ID, function (err) {

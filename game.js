@@ -94,10 +94,18 @@ G.removeSpec = function (client) {
 };
 
 G.addPlayer = function (player) {
-    if (this.players.indexOf(player) >= 0)
-        return this.warn('Already playing.');
-    if (this.players.length >= MAX_PLAYERS)
-        return player.send('set', {t: 'account', action: 'gameFull'});
+    if (this.players.indexOf(player) >= 0) {
+        this.warn('Already playing.');
+        return false;
+    }
+    if (player.ip != '127.0.0.1' && this.players.some(function (p) { return p.ip == player.ip; })) {
+        this.warn('Already playing.');
+        return false;
+    }
+    if (this.players.length >= MAX_PLAYERS) {
+        player.send('set', {t: 'account', action: 'gameFull'});
+        return false;
+    }
 
     player.game = this;
     var self = this;
@@ -129,6 +137,7 @@ G.addPlayer = function (player) {
         self.sendState(player);
         self.newPlayer();
     });
+    return true;
 };
 
 G.dropPlayer = function (player) {
@@ -701,27 +710,13 @@ exports.Player = Player;
 
 var P = Player.prototype;
 
-Player.load = function (r, id, cb) {
+Player.load = function (id, cb) {
     if (id in PLAYERS)
         return cb(null, PLAYERS[id]);
 
-    var self = this;
-    r.hget('cam:user:' + id, 'game', function (err, gameId) {
-        if (err)
-            return cb(err);
-        if (id in PLAYERS)
-            return cb(null, PLAYERS[id]);
-        var player = new Player(id);
-        PLAYERS[id] = player;
-        if (!gameId)
-            return cb(null, player);
-        Game.load(gameId, function (err, game) {
-            if (err)
-                return player.drop(err);
-            player.game = gameId;
-            cb(null, player);
-        });
-    });
+    var player = new Player(id);
+    PLAYERS[id] = player;
+    return cb(null, player);
 };
 
 ['send', 'sendRaw', 'drop', 'warn'].forEach(function (call) {
@@ -898,24 +893,16 @@ P.handle_join = function (msg) {
         return false;
     var gameId = parseInt(msg.game, 10);
     var self = this;
-    this.r.hget(this.key, 'game', function (err, existing) {
+    Game.load(gameId, function (err, game) {
         if (err)
             return self.drop(err);
-        if (existing)
-            return self.warn('Already in a game!');
-        Game.load(gameId, function (err, game) {
-            if (err)
-                return self.drop(err);
 
-            // xxx move this
-            if (self.ip != '127.0.0.1' && game.players.some(function (p) { return p.ip == self.ip; }))
-                return self.warn('Already playing.');
-
+        var joined = game.addPlayer(self);
+        if (joined) {
             self.send('set', {t: 'account', action: 'leave'});
             if (game.current != 'inactive')
                 self.resetAfk();
-            game.addPlayer(self);
-        });
+        }
     });
 };
 
