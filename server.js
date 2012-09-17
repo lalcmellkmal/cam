@@ -267,9 +267,18 @@ C.handle_suggest = function (msg) {
     var card = msg.card;
     if (typeof card != 'string')
         return;
-    card = card.trim().replace(/\s+/g, ' ').slice(0, 200).toLowerCase();
-    if (card)
-        this.r.zincrby('cam:suggestions', 1, card);
+    card = card.trim().replace(/\s+/g, ' ').slice(0, 100);
+    var norm = card.toLowerCase().replace(/[^a-z]+/g, '');
+    if (!norm)
+        return;
+    var self = this;
+    this.r.sadd('cam:suggestions', norm, function (err, added) {
+        if (err)
+            return self.drop(err);
+        if (!added)
+            return;
+        self.r.lpush('cam:suggestionList', card);
+    });
 };
 
 function serveSuggestions(req, resp, next) {
@@ -277,13 +286,12 @@ function serveSuggestions(req, resp, next) {
     if (url.pathname.match(/^\/suggestions\/?$/)) {
         resp.writeHead(200, noCacheHeaders);
         resp.write('<!doctype html><meta charset=utf8><title>Suggestions</title>\n');
-        SHARED_REDIS.zrevrange('cam:suggestions', 0, -1, 'withscores', function (err, suggestions) {
+        SHARED_REDIS.lrange('cam:suggestionList', 0, -1, function (err, suggestions) {
             if (err)
                 return console.error(err);
-            for (var i = 0; i < suggestions.length; i += 2) {
+            for (var i = 0; i < suggestions.length; i ++) {
                 var card = connect.utils.escape(suggestions[i]);
-                var count = parseInt(suggestions[i+1], 10);
-                resp.write(card + (count > 1 ? ' (' + count + ')' : '') + '<br>');
+                resp.write(card + '<br>\n');
             }
             resp.end();
         });
