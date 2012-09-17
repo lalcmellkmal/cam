@@ -10,4 +10,5 @@ NPM deps:
 * async
 * connect
 * redis
+* sockjs
 * underscore
