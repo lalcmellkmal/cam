@@ -389,10 +389,18 @@ var ChatView = Backbone.View.extend({
 	},
 });
 
-window.account = new Account;
-window.chat = new Chat;
-window.hand = new Cards;
-window.game = new Game;
+var account = new Account;
+var chat = new Chat;
+var hand = new Cards;
+var game = new Game;
+
+var TARGETS = {
+	account: account,
+	chat: chat,
+	hand: hand,
+	game: game,
+};
+var sock = new SockJS(SOCKJS_URL);
 
 function send(type, msg) {
 	msg.a = type;
@@ -400,7 +408,6 @@ function send(type, msg) {
 	sock.send(msg);
 }
 
-window.sock = new SockJS(SOCKJS_URL);
 sock.onopen = function () {
 	var id = localStorage.getItem('camId');
 	if (!id) {
@@ -430,15 +437,15 @@ var dispatch = {
 			target = this.t;
 			delete this.t;
 		}
-		window[target].set(this);
+		TARGETS[target].set(this);
 	},
 
 	add: function () {
-		window[this.t].add(this.objs || this.obj);
+		TARGETS[this.t].add(this.objs || this.obj);
 	},
 
 	reset: function () {
-		window[this.t].reset(this.objs);
+		TARGETS[this.t].reset(this.objs);
 	},
 
 	select: function () {
