@@ -28,7 +28,7 @@ function startServer() {
     var sockJs = require('sockjs').createServer();
     sockJs.on('connection', onConnection);
     sockJs.installHandlers(http, {
-        sockjs_url: 'sockjs-0.3.min.js',
+        sockjs_url: config.SOCKJS_SCRIPT_URL,
         prefix: config.SOCKJS_PREFIX,
         jsessionid: false,
         log: sockJsLog,
