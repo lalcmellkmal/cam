@@ -588,7 +588,7 @@ G.roundOver = function (winner) {
                     return self.fail(err);
                 self.nextNominations(false);
             });
-        }, 10 * 1000);
+        }, 30 * 1000);
     });
 };
 
