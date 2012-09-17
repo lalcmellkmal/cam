@@ -310,7 +310,7 @@ C.drop = function (reason) {
     console.error(this.name + ' error: ' + util.inspect(reason));
     if (typeof reason == 'string')
         this.send('set', {status: reason, error: true});
-    this.sock.close();
+    this.sock.destroySoon();
     this.state = 'dropped';
 };
 
