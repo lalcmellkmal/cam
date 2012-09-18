@@ -482,7 +482,8 @@ G.onelecting = function () {
                 return self.fail(err);
 
             self.players.forEach(function (player) {
-                player.confirmSubmission(submissionIds);
+                if (player.id != self.dealer)
+                    player.confirmSubmission(submissionIds);
                 // delay for the animation
                 setTimeout(player.dealHand.bind(player, false), 2000);
             });
