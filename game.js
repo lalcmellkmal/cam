@@ -37,9 +37,9 @@ function Game(id) {
     this.players = [];
     this.specs = [];
 
-    this.broadcastRosterCb = this.deferral('broadcastRoster');
-    this.on('change:players', this.broadcastRosterCb);
-    this.on('change:specs', this.broadcastRosterCb);
+    var rosterChanged = this.deferral('broadcastRoster');
+    this.on('change:players', rosterChanged);
+    this.on('change:specs', rosterChanged);
 
     var changed = this.deferral('broadcastState');
     this.on('change:black', changed);
@@ -52,6 +52,7 @@ function Game(id) {
     this.playerNameChangedCb = this.playerNameChanged.bind(this);
     this.playerScoreChangedCb = this.playerScoreChanged.bind(this);
     this.playerSelectionChangedCb = this.playerSelectionChanged.bind(this);
+    this.specNameChangedCb = this.specNameChanged.bind(this);
 
     this.on('change:submissions', this.setupElectionTimer.bind(this));
 }
@@ -84,7 +85,7 @@ G.addSpec = function (client) {
         return this.warn('Already watching.');
     this.specs.push(client);
     this.setChanged('specs');
-    client.on('change:name', this.broadcastRosterCb);
+    client.on('change:name', this.specNameChangedCb);
     client.once('disconnected', this.removeSpec.bind(this, client));
     this.sendState(client);
     this.sendMessageHistory(client);
@@ -96,7 +97,7 @@ G.removeSpec = function (client) {
         return;
     this.specs.splice(i, 1);
     this.setChanged('specs');
-    client.removeListener('change:name', this.broadcastRosterCb);
+    client.removeListener('change:name', this.specNameChangedCb);
 };
 
 G.addPlayer = function (player) {
@@ -206,6 +207,10 @@ G.broadcastRoster = function () {
 
 G.sendRoster = function (dest) {
     dest.send('reset', {t: 'roster', objs: this.makeRoster()});
+};
+
+G.specNameChanged = function (name, client) {
+    this.sendAll('set', {t: 'roster', id: client.clientId, name: name});
 };
 
 G.playerNameChanged = function (name, player, info) {

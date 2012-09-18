@@ -252,7 +252,7 @@ C.handle_setName = function (msg) {
                 return self.drop(err);
             }
             self.name = name;
-            self.emit('change:name', name);
+            self.emit('change:name', name, self);
             if (self.player)
                 self.player.set({name: name});
             self.send('set', {t: 'account', name: name});
