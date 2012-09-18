@@ -276,9 +276,13 @@ var PersonView = Backbone.View.extend({
 
 	initialize: function () {
 		this.model.on('change', this.render, this);
+		this.model.on('change:score', this.renderScore, this);
 	},
 
-	render: function () {
+	render: function (ignored, meta) {
+		if (meta && meta.changes && _.isEqual(_.keys(meta.changes), ['score']))
+			return; // Just a score change, let renderScore handle it
+
 		var attrs = this.model.attributes;
 		var $a = this.$el;
 		$a.text(attrs.name).attr('class', attrs.kind);
@@ -287,6 +291,18 @@ var PersonView = Backbone.View.extend({
 		$a.toggleClass('ready', !!attrs.ready);
 		$a.toggleClass('abandoned', !!attrs.abandoned);
 		return this;
+	},
+
+	renderScore: function () {
+		var $em = this.$('em');
+		if (!$em.length) {
+			$em = $('<em/>');
+			this.$el.append(' ', $em);
+		}
+		else
+			$em.stop().css({opacity: 0}).animate({opacity: 1}, 'fast');
+		$em.text('(' + this.model.get('score') + ')');
+		$em.css({color: '#ff5555'}).delay(1000).animate({color: '#5555ff'});
 	},
 });
 
