@@ -111,6 +111,7 @@ ul {
 	padding: 0.25em;
 	text-align: right;
 	height: 15em;
+	white-space: nowrap;
 	width: 10em;
 }
 #roster em {

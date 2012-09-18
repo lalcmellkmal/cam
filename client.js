@@ -283,7 +283,7 @@ var PersonView = Backbone.View.extend({
 		var $a = this.$el;
 		$a.text(attrs.name).attr('class', attrs.kind);
 		if (attrs.score)
-			$a.append('&nbsp;', $('<em/>', {text: '('+attrs.score+')'}));
+			$a.append(' ', $('<em/>', {text: '('+attrs.score+')'}));
 		$a.toggleClass('ready', !!attrs.ready);
 		$a.toggleClass('abandoned', !!attrs.abandoned);
 		return this;
