@@ -15,6 +15,7 @@ var MESSAGE_RATE = 7;
 var TIMEOUTS = {
     nomination: 25,
     election: 40,
+    intermission: 20,
     abandoned: 30, // clientless
     afk: 10*60, // no actions
 };
@@ -588,7 +589,7 @@ G.roundOver = function (winner) {
                     return self.fail(err);
                 self.nextNominations(false);
             });
-        }, 30 * 1000);
+        }, TIMEOUTS.intermission * 1000);
     });
 };
 
