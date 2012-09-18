@@ -493,7 +493,7 @@ var dispatch = {
 			target = target.get(this.id);
 			delete this.id;
 		}
-		if (target)
+		if (target && target.set)
 			target.set(this);
 	},
 
