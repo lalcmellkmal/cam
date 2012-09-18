@@ -1030,10 +1030,7 @@ P.handOverSubmission = function (m, submission, discards) {
 
 P.confirmSubmission = function (mapping) {
     var sub = mapping[this.id];
-    if (sub)
-        this.send('select', {cards: sub.cards, final: true});
-    else
-        this.send('set', {status: 'Invalid submission!'});
+    this.send('select', {cards: sub ? sub.cards : [], final: true});
     this.send('set', {action: null});
     this.set({selection: null});
 };
