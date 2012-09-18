@@ -46,7 +46,10 @@ function Game(id) {
     this.on('change:dealer', changed);
     this.on('change:submissions', changed);
 
+    this.playerClientChangedCb = this.playerClientChanged.bind(this);
     this.playerNameChangedCb = this.playerNameChanged.bind(this);
+    this.playerScoreChangedCb = this.playerScoreChanged.bind(this);
+    this.playerSelectionChangedCb = this.playerSelectionChanged.bind(this);
 
     this.on('change:submissions', this.setupElectionTimer.bind(this));
 }
@@ -125,10 +128,9 @@ G.addPlayer = function (player) {
         if (!self.dealer)
             self.nextDealer();
 
-        player.on('change', self.broadcastRosterCb);
-        if (!self.nominateCb)
-            self.nominateCb = self.nominate.bind(self);
-        player.on('change:selection', self.nominateCb);
+        player.on('change:client', self.playerClientChangedCb);
+        player.on('change:selection', self.playerSelectionChangedCb);
+        player.on('change:score', self.playerScoreChangedCb);
         player.on('change:name', self.playerNameChangedCb);
         player.once('dropped', self.dropPlayer.bind(self, player));
 
@@ -169,9 +171,10 @@ G.dropPlayer = function (player) {
                 console.error(err);
 
             player.set({game: null});
-            player.removeListener('change', self.broadcastRosterCb);
-            player.removeListener('change:selection', self.nominateCb);
+            player.removeListener('change:client', self.playerClientChangedCb);
             player.removeListener('change:name', self.playerNameChangedCb);
+            player.removeListener('change:score', self.playerScoreChangedCb);
+            player.removeListener('change:selection', self.playerSelectionChangedCb);
             player.removeAllListeners('dropped');
             player.emit('dropComplete');
 
@@ -195,15 +198,17 @@ G.makeRoster = function () {
     return roster;
 };
 
-G.sendRoster = function (dest) {
-    dest.send('set', {roster: this.makeRoster()});
+G.broadcastRoster = function () {
+    this.sendAll('reset', {t: 'roster', objs: this.makeRoster()});
 };
 
-G.broadcastRoster = function () {
-    this.sendAll('set', {roster: this.makeRoster()});
+G.sendRoster = function (dest) {
+    dest.send('reset', {t: 'roster', objs: this.makeRoster()});
 };
 
 G.playerNameChanged = function (name, player, info) {
+    this.sendAll('set', {t: 'roster', id: player.id, name: name});
+
     var prev = info.previous;
     if (!prev || prev == 'Anonymous')
         return;
@@ -214,6 +219,14 @@ G.playerNameChanged = function (name, player, info) {
         if (okay)
             self.logMeta(prev + ' changed their name to ' + name + '.');
     });
+};
+
+G.playerScoreChanged = function (score, player) {
+    this.sendAll('set', {t: 'roster', id: player.id, score: score});
+};
+
+G.playerClientChanged = function (client, player) {
+    this.sendAll('set', {t: 'roster', id: player.id, abandoned: !client});
 };
 
 G.onbeforenewPlayer = function () {
@@ -367,6 +380,18 @@ G.sendState = function (dest) {
 
 G.saveState = function () {
     // todo
+};
+
+G.playerSelectionChanged = function (sel, player, info) {
+    var ready = null;
+    if (sel && !info.previous)
+        ready = true;
+    else if (!sel && info.previous)
+        ready = false;
+    if (ready !== null)
+        this.sendAll('set', {t: 'roster', id: player.id, ready: ready});
+
+    this.nominate();
 };
 
 G.onbeforenominate = function () {
@@ -751,6 +776,7 @@ P.adopt = function (client) {
                 self.drop(err);
             self.game.sendState(self);
             self.game.sendMessageHistory(self);
+            self.game.sendRoster(self);
             self.send('set', {t: 'account', action: 'leave'});
         });
     }
@@ -783,6 +809,7 @@ P.cleanUp = function () {
 
 P.toJSON = function () {
     var json = this.client ? this.client.toJSON() : {name: this.name};
+    json.id = this.id;
     json.kind = 'player';
     json.score = this.score;
     if (this.selection)

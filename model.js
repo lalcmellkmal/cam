@@ -29,15 +29,16 @@ M.setChanged = function (key) {
 };
 
 M.change = function () {
+    var overallInfo = {previous: {}};
     for (var k in this._changed) {
         if (this._changed[k]) {
             var info = {};
             if (k in this._previousAttributes)
-                info.previous = this._previousAttributes[k];
+                overallInfo.previous[k] = info.previous = this._previousAttributes[k];
             this.emit('change:' + k, this[k], this, info);
         }
     }
-    this.emit('change', this);
+    this.emit('change', this, overallInfo);
     this._changed = {};
     this._previousAttributes = {};
 };

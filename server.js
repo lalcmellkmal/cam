@@ -63,10 +63,13 @@ function sockJsLog(sev, msg) {
         console.log(msg);
 }
 
+var CLIENT_CTR = 0;
+
 function Client(sock, ip) {
     events.EventEmitter.call(this);
     this.sock = sock;
     this.ip = ip;
+    this.clientId = 'C' + (++CLIENT_CTR);
     this.r = SHARED_REDIS;
     this.state = 'new';
     this.buffer = [];
@@ -76,7 +79,7 @@ util.inherits(Client, events.EventEmitter);
 var C = Client.prototype;
 
 C.toJSON = function () {
-    return {name: this.name || 'Anonymous', kind: 'spec'};
+    return {name: this.name || 'Anonymous', kind: 'spec', id: this.clientId};
 };
 
 C.onMessage = function (data) {

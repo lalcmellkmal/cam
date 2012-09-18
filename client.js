@@ -119,16 +119,15 @@ var GameView = Backbone.View.extend({
 	},
 
 	initialize: function () {
-		var handView = new HandView({model: hand, id: 'myHand'});
-		var $roster = $('<p/>', {id: 'roster'});
+		var $hand = new HandView({model: hand, id: 'myHand'}).render().el;
+		var $black = $('<li class="black"><a/></li>').hide();
 		var $submissions = $('<div/>', {id: 'submissions'});
-		var black = $('<li class="black"><a/></li>').hide();
-		var $chat = new ChatView({model: chat}).render().$el;
+		var $roster = new RosterView({model: roster}).render().el;
+		var $chat = new ChatView({model: chat}).render().el;
 		var $social = $('<div id=social/>').append($roster, ' ', $chat);
-		this.$el.prepend(black, $social, $submissions).append(handView.el);
+		this.$el.prepend($black, $social, $submissions).append($hand);
 
 		this.model.on('change:status change:error', this.renderStatus, this);
-		this.model.on('change:roster', this.renderRoster, this);
 		this.model.on('change:black', this.renderBlack, this);
 		this.model.on('change:action', this.renderAction, this);
 		this.model.on('change:submissions change:blackInfo', this.renderSubmissions, this);
@@ -149,23 +148,6 @@ var GameView = Backbone.View.extend({
 
 	renderCanJoin: function (model, canJoin) {
 		this.$('#join').toggle(!!canJoin);
-	},
-
-	renderRoster: function (model, roster) {
-		var $list = this.$('#roster').empty();
-		_.each(roster, function (player) {
-			var $a = $('<a/>', {
-				text: player.name,
-				class: player.kind,
-			});
-			if (player.score)
-				$a.append('&nbsp;', $('<em/>', {text: '('+player.score+')'}));
-			if (player.ready)
-				$a.addClass('ready');
-			if (player.abandoned)
-				$a.addClass('abandoned');
-			$list.append($a, '<br>');
-		});
 	},
 
 	renderBlack: function (model, black) {
@@ -282,6 +264,52 @@ var AccountView = Backbone.View.extend({
 	},
 });
 
+var Person = Backbone.Model.extend({
+});
+
+var Roster = Backbone.Collection.extend({
+	model: Person,
+});
+
+var PersonView = Backbone.View.extend({
+	tagName: 'a',
+
+	initialize: function () {
+		this.model.on('change', this.render, this);
+	},
+
+	render: function () {
+		var attrs = this.model.attributes;
+		var $a = this.$el;
+		$a.text(attrs.name).attr('class', attrs.kind);
+		if (attrs.score)
+			$a.append('&nbsp;', $('<em/>', {text: '('+attrs.score+')'}));
+		$a.toggleClass('ready', !!attrs.ready);
+		$a.toggleClass('abandoned', !!attrs.abandoned);
+		return this;
+	},
+});
+
+var RosterView = Backbone.View.extend({
+	tagName: 'p',
+	id: 'roster',
+
+	initialize: function () {
+		this.model.on('reset', this.reset, this);
+		this.model.on('add', this.addPerson, this);
+	},
+
+	reset: function (model, roster) {
+		this.$el.empty();
+		this.model.each(this.addPerson, this);
+	},
+
+	addPerson: function (person) {
+		this.$el.append(new PersonView({model: person}).render().el, '<br>');
+	},
+});
+
+
 var ChatMessage = Backbone.Model.extend({
 });
 
@@ -391,12 +419,14 @@ var ChatView = Backbone.View.extend({
 
 var account = new Account;
 var chat = new Chat;
+var roster = new Roster;
 var hand = new Cards;
 var game = new Game;
 
 var TARGETS = {
 	account: account,
 	chat: chat,
+	roster: roster,
 	hand: hand,
 	game: game,
 };
@@ -437,7 +467,13 @@ var dispatch = {
 			target = this.t;
 			delete this.t;
 		}
-		TARGETS[target].set(this);
+		target = TARGETS[target];
+		if (this.id) {
+			target = target.get(this.id);
+			delete this.id;
+		}
+		if (target)
+			target.set(this);
 	},
 
 	add: function () {
