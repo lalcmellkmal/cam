@@ -15,7 +15,7 @@ exports.buildScripts = function (cb) {
             return cb(err);
         var clientJs = new Buffer(assets.join('\n'), 'UTF-8');
         var hash = crypto.createHash('md5').update(clientJs).digest('base64');
-        var clientJsPath = 'client-' + hash.slice(1, 9) + '.js';
+        var clientJsPath = 'client-' + hash.slice(1, 9).replace(/[\/]/g, 'DERP') + '.js';
         var scriptInfo = {clientJs: clientJs, clientJsPath: '/'+clientJsPath};
 
         read('index.tmpl.html', function (err, indexTmpl) {
