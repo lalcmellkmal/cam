@@ -11,6 +11,7 @@ var MIN_PLAYERS = 3;
 var MAX_PLAYERS = 20;
 var ROUND_POINTS = 5;
 var MESSAGE_RATE = 7;
+var DEALER_TERM = "judge";
 
 var TIMEOUTS = {
     nomination: 25,
@@ -269,7 +270,7 @@ G.disclaimBlack = function (black) {
         if (self.current != 'nominating')
             return self.saveState();
         if (!self.getDealerPlayer())
-            return self.fail("No dealer!");
+            return self.fail("No " + DEALER_TERM + "!");
         self.set({black: common.parseBlack(black)});
     });
 };
@@ -352,7 +353,7 @@ G.sendState = function (dest) {
             if (!player)
                 info.status = 'Waiting for submissions...';
             else if (dealer)
-                info.status = 'You are the dealer. Waiting for submissions...';
+                info.status = 'You are the ' + DEALER_TERM + '. Waiting for submissions...';
             else {
                 info.action = 'nominate';
                 var n = this.black.blankCount;
@@ -367,7 +368,7 @@ G.sendState = function (dest) {
                 info.action = 'elect';
             }
             else
-                info.status = 'Dealer is picking their favorite...';
+                info.status = 'The ' + DEALER_TERM + ' is picking their favorite...';
             info.submissions = this.anonymizedSubmissions();
             break;
         default:
@@ -509,7 +510,7 @@ G.gotElection = function (dealer, choice) {
     if (this.current != 'electing')
         return dealer.warn("Not picking right now.");
     if (dealer.id != this.dealer)
-        return dealer.warn("You are not the dealer.");
+        return dealer.warn("You are not the " + DEALER_TERM + ".");
 
     for (var i = 0; i < this.submissions.length; i++) {
         var sub = this.submissions[i];
