@@ -40,12 +40,13 @@ function Game(id) {
     this.broadcastRosterCb = this.deferral('broadcastRoster');
     this.on('change:players', this.broadcastRosterCb);
     this.on('change:specs', this.broadcastRosterCb);
-    this.on('change:dealer', this.broadcastRosterCb);
 
     var changed = this.deferral('broadcastState');
     this.on('change:black', changed);
     this.on('change:dealer', changed);
     this.on('change:submissions', changed);
+
+    this.on('change:dealer', this.dealerChanged.bind(this));
 
     this.playerClientChangedCb = this.playerClientChanged.bind(this);
     this.playerNameChangedCb = this.playerNameChanged.bind(this);
@@ -228,6 +229,12 @@ G.playerScoreChanged = function (score, player) {
 
 G.playerClientChanged = function (client, player) {
     this.sendAll('set', {t: 'roster', id: player.id, abandoned: !client});
+};
+
+G.dealerChanged = function (newDealer, game, info) {
+    var oldDealer = info.previous;
+    this.sendAll('set', {t: 'roster', id: oldDealer, kind: 'player'});
+    this.sendAll('set', {t: 'roster', id: newDealer, kind: 'dealer'});
 };
 
 G.onbeforenewPlayer = function () {
