@@ -154,14 +154,14 @@ G.dropPlayer = function (player) {
     this.setChanged('players');
 
     if (this.dealer == player.id) {
-        var newDealer;
+        var newDealer = null;
         if (this.players[i])
-            newDealer = this.players[i].id;
+            newDealer = this.players[i];
         else if (this.players[0])
-            newDealer = this.players[0].id;
-        else
-            newDealer = null; // state should change for us
-        this.set({dealer: newDealer});
+            newDealer = this.players[0];
+        this.set({dealer: newDealer && newDealer.id});
+        if (newDealer)
+            newDealer.set({selection: null});
         this.electRandom(true);
     }
 
