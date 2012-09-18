@@ -238,7 +238,8 @@ G.playerClientChanged = function (client, player) {
 
 G.dealerChanged = function (newDealer, game, info) {
     var oldDealer = info.previous;
-    this.sendAll('set', {t: 'roster', id: oldDealer, kind: 'player'});
+    if (oldDealer)
+        this.sendAll('set', {t: 'roster', id: oldDealer, kind: 'player'});
     this.sendAll('set', {t: 'roster', id: newDealer, kind: 'dealer'});
 };
 
