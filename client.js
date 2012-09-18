@@ -605,10 +605,7 @@ function suggestionBox() {
 		var card = $sug.val().trim();
 		if (card) {
 			send('suggest', {card: card});
-			$thanks.css({opacity: 1});
-			setTimeout(function () {
-				$thanks.animate({opacity: 0});
-			}, 500);
+			$thanks.stop().css({opacity: 1}).delay(500).animate({opacity: 0});
 		}
 		$sug.val('').focus();
 	});
