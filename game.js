@@ -389,6 +389,16 @@ G.sendState = function (dest) {
             info.status = "Unknown state.";
     }
 
+    // Hacky delta: Avoid sending submissions over and over
+    if (info.submissions) {
+        if (dest.sentSubmissions)
+            delete info.submissions;
+        else
+            dest.sentSubmissions = true;
+    }
+    else
+        dest.sentSubmissions = false;
+
     dest.send('set', info);
 };
 
