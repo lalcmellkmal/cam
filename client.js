@@ -43,7 +43,7 @@ var CardView = Backbone.View.extend({
 
 	render: function () {
 		var attrs = this.model.attributes;
-		this.$('a').text(this.model.id);
+		this.$('a').html(escapeCard(this.model.id));
 		this.$('span').text(attrs.index || '').toggle(!!attrs.index);
 		this.$el.prop('class', attrs.state);
 		return this;
@@ -196,10 +196,15 @@ var GameView = Backbone.View.extend({
 	},
 });
 
+var entities = {'&': '&amp;', '<': '&lt', '>': '&gt;', '"': '&quot;', '[-]': '&shy;'};
+function escapeCard(card) {
+	return card.replace(/(&|<|>|"|\[-\])/g, function (c) { return entities[c]; });
+}
+
 function renderTokenized($dest, tokens) {
 	_.each(tokens, function (bit) {
 		if (bit.white)
-			$dest.append($('<b/>', {text: bit.white}));
+			$dest.append($('<b/>', {html: escapeCard(bit.white)}));
 		else
 			$dest.append(document.createTextNode(bit));
 	});
