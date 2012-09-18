@@ -424,7 +424,7 @@ var ChatView = Backbone.View.extend({
 	},
 
 	renderCountdown: function (model, n, info) {
-		var prev = model._previousAttributes.countdown;
+		var prev = model.previous('countdown');
 		prev = (prev && prev < 11);
 		if (n && n < 11) {
 			this.$countdown.text('Ending in ' + n + '...');
