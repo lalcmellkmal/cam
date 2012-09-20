@@ -25,6 +25,8 @@ exports.parseBlack = function (black) {
             blank.omitBeing = true;
         if (after)
             blank.omitPeriod = true;
+        if (after && after.match(/^ing/i))
+            blank.omitIng = true;
         tokens[i] = blank;
     }
     info.tokens = tokens;
@@ -63,6 +65,8 @@ exports.applySubmission = function (black, sub, abbrev) {
         }
         if (blank.omitPeriod)
             white = white.replace(/[.]$/, '');
+        if (blank.omitIng)
+            white = white.replace(/ing$/, '');
 
         bits.push({white: white});
 
