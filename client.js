@@ -298,15 +298,17 @@ var PersonView = Backbone.View.extend({
 		return this;
 	},
 
-	renderScore: function () {
+	renderScore: function (model, score) {
 		var $em = this.$('em');
-		if (!$em.length) {
-			$em = $('<em/>');
-			this.$el.append(' ', $em);
+		if (!score) {
+			$em.remove();
+			return;
 		}
+		if (!$em.length)
+			$em = $('<em/>').appendTo(this.$el);
 		else
 			$em.stop().css({opacity: 0}).animate({opacity: 1}, 'fast');
-		$em.text('(' + this.model.get('score') + ')');
+		$em.text(' (' + this.model.get('score') + ')');
 		$em.css({color: '#ff5555'}).delay(1000).animate({color: '#5555ff'});
 	},
 });
