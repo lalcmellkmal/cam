@@ -60,7 +60,7 @@ Omurice.
 Ten thousand yen.
 M-Masaka...!
 Kotatsu.
-Tannasin.
+Tanasinn.
 Tenshi's corndog.
 Shift-JIS art.
 Tokyo Tower.
@@ -112,3 +112,4 @@ Rice.
 Clamshell phones.
 Jugemu jugemu.
 Shameful displays.
+Honorifics.
