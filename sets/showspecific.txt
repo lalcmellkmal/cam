@@ -63,6 +63,7 @@ A Progressive Knife.
 Rei clones.
 Synchronized mecha dancing.
 Shinji.
+The Third Impact.
 Tumbling down, tumbling down, tumbling down.
 Unit-01.
 # FIST OF THE NORTH STAR
@@ -185,6 +186,7 @@ Scanty & Kneesocks.
 The Child Broiler.
 Curry eaten with those you love.
 DESTINY.
+Fabulous Max!
 IMAGIIIIIINE!
 The Penguindrum.
 Seizon senryakuuu!
@@ -201,6 +203,7 @@ Judgemento.
 Level Upper.
 Railguns.
 Saten.
+Vectors.
 # REDLINE
 Hand-drawing for 7 years.
 Maachine Heaaaaaad!
@@ -208,11 +211,16 @@ Maachine Heaaaaaad!
 MARU!
 The Sweats Club.
 Wan.
+# ROBOTICS;NOTES
+Frau Kojiro.
+Gunvarrel Ankh Striker.
+Impacto!
 # SAKI
 Absurd Mahjong hands.
 Game-changing tacos.
 Lesbians who have to go to the bathroom playing Mahjong underwater.
 Ron!
+Stealth Momo.
 Wahaha.
 # S&W
 Economics.
@@ -228,6 +236,9 @@ CERN.
 Dr. Pepper.
 El. Psy. Congroo.
 Gel-bananas.
+Hououin Kyouma.
+Lab coats.
+Maddo Scientistu.
 John Titor.
 Tuturu.
 # SZS
@@ -262,6 +273,7 @@ Strawberry parfaits.
 Card games on motorcycles.
 Children's card games.
 The heart of the cards.
+Mind Crush.
 My trap card.
 # YURU YURI
 Akari~n.
@@ -368,3 +380,7 @@ JoJo.
 Yuno Gasai.
 Panzerfahren.
 Aircraft carriers.
+Beyblades.
+Subara.
+Girls Dead Monster.
+Dokuro-chan.
