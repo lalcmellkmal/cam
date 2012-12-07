@@ -19,13 +19,13 @@ exports.parseBlack = function (black) {
     for (var i = 1; i < tokens.length; i += 2) {
         var blank = {};
         var before = tokens[i-1], after = tokens[i+1];
-        if (before.match(/\b(?:the|a|an|my|your|yo'|his|her|their)\s+$/i))
+        if (/\b(?:the|a|an|my|your|yo'|his|her|their)\s+$/i.test(before))
             blank.omitArticle = true;
-        if (before.match(/\bbeing\s+$/i))
+        if (/\bbeing\s+$/i.test(before))
             blank.omitBeing = true;
         if (after)
             blank.omitPeriod = true;
-        if (after && after.match(/^ing/i))
+        if (/^ing/i.test(after))
             blank.omitIng = true;
         tokens[i] = blank;
     }

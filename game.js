@@ -943,7 +943,7 @@ P.incrementTotalScore = function (m) {
 };
 
 P.handle_join = function (msg) {
-    if (typeof msg.game != 'string' || !msg.game.match(/^\d+$/))
+    if (!/^\d+$/.test(msg.game))
         return false;
     var gameId = parseInt(msg.game, 10);
     var self = this;
@@ -1081,7 +1081,7 @@ function loadDeck(filename, dest, cb) {
             return cb(err);
         file.split('\n').forEach(function (line) {
             line = line.trim();
-            if (line && !line.match(/^#/))
+            if (line && !/^#/.test(line))
                 dest.push(line);
         });
         cb(null);
@@ -1094,7 +1094,7 @@ function setupRound(gameId, cb) {
             return cb(err);
         var whiteSets = [], blackSets = [];
         sets.forEach(function (set) {
-            if (set.match(/black/i))
+            if (/black/i.test(set))
                 blackSets.push(set);
             else
                 whiteSets.push(set);

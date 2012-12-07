@@ -596,7 +596,7 @@ function actionChangeWhileBlurred() {
 }
 
 function blinkTitle() {
-	if (document.title.match(/^\(!\)/))
+	if (/^\(!\)/.test(document.title))
 		document.title = '( ) ' + normalTitle;
 	else
 		document.title = '(!) ' + normalTitle;

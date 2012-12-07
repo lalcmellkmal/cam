@@ -140,7 +140,7 @@ C.handle_login = function (msg) {
     if (this.state != 'new' || !(typeof msg.id == 'string'))
         return this.warn("Can't login.");
     var fakeId = msg.id;
-    if (!fakeId.match(/^\d{1,20}$/))
+    if (!/^\d{1,20}$/.test(fakeId))
         return this.warn("Bad id.");
     var self = this;
     // Get them a user ID first
@@ -286,7 +286,7 @@ C.handle_suggest = function (msg) {
 
 function serveSuggestions(req, resp, next) {
     var url = urlParse(req.url, true);
-    if (url.pathname.match(/^\/suggestions\/?$/)) {
+    if (/^\/suggestions\/?$/.test(url.pathname)) {
         resp.writeHead(200, noCacheHeaders);
         resp.write('<!doctype html><meta charset=utf8><title>Suggestions</title>\n');
         SHARED_REDIS.lrange('cam:suggestionList', 0, -1, function (err, suggestions) {
