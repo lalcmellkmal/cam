@@ -19,7 +19,7 @@ exports.parseBlack = function (black) {
     for (var i = 1; i < tokens.length; i += 2) {
         var blank = {};
         var before = tokens[i-1], after = tokens[i+1];
-        if (/\b(?:the|a|an|my|your|yo'|his|her|their)\s+$/i.test(before))
+        if (/\b(?:the|a|an|my|your|yo'|our|his|her|their|more)\s+$/i.test(before))
             blank.omitArticle = true;
         if (/\bbeing\s+$/i.test(before))
             blank.omitBeing = true;
