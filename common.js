@@ -8,7 +8,7 @@ else
 _.extend(exports, {
     USERNAME_LENGTH: 15,
     MESSAGE_LENGTH: 120,
-    CHAT_HISTORY: 40,
+    CHAT_HISTORY: 80,
 });
 
 exports.parseBlack = function (black) {
