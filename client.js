@@ -393,7 +393,7 @@ var ChatView = Backbone.View.extend({
 			$box.append(view.render().el);
 		}
 		$box.append(this.$countdown);
-		this.scrollToBottom();
+		this.scrollToBottom(true);
 	},
 
 	addMessage: function (message) {
@@ -401,12 +401,16 @@ var ChatView = Backbone.View.extend({
 		var $msg = view.render().$el;
 		$msg.hide().fadeIn('fast').insertBefore(this.$countdown);
 		this.trim();
-		this.scrollToBottom();
+		var isOwn = message.get('name') == account.get('name');
+		this.scrollToBottom(isOwn);
 	},
 
-	scrollToBottom: function () {
+	scrollToBottom: function (force) {
 		var $box = this.$('#messages');
-		$box.scrollTop($box[0].scrollHeight);
+		var box = $box[0];
+		var y = box.scrollHeight - box.clientHeight;
+		if (force || box.scrollTop + 20 > y)
+			$box.scrollTop(box.scrollHeight);
 	},
 
 	trim: function () {
