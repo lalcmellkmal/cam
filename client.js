@@ -357,6 +357,13 @@ var ChatMessageView = Backbone.View.extend({
 			$p.prepend($('<b/>', {text: '<' + attrs.name + '>'}), ' ');
 		if (attrs.kind)
 			$p.addClass(attrs.kind);
+		if (attrs.date) {
+			var when = new Date(attrs.date);
+			var elapsed = new Date().getTime() - attrs.date;
+			var recent = elapsed < 1000 * 60 * 60 * 12;
+			$p.attr('title', recent ? when.toLocaleTimeString()
+					: when.toLocaleString());
+		}
 		return this;
 	},
 });

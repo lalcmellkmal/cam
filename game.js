@@ -722,7 +722,11 @@ G.chat = function (client, msg) {
         if (err)
             return client.drop(err);
         if (okay)
-            self.pushMessage({text: text, name: client.name || 'Anonymous'});
+            self.pushMessage({
+                    text: text,
+                    name: client.name || 'Anonymous',
+                    date: new Date().getTime(),
+            });
     });
 };
 
