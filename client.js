@@ -400,24 +400,30 @@ var ChatView = Backbone.View.extend({
 			$box.append(view.render().el);
 		}
 		$box.append(this.$countdown);
-		this.scrollToBottom(true);
+		this.scrollToBottom();
 	},
 
 	addMessage: function (message) {
+		var myName = account.get('name');
+		var ownMessage = myName && message.get('name') == myName;
+		var shouldScroll = ownMessage || this.atBottom();
 		var view = new ChatMessageView({model: message});
 		var $msg = view.render().$el;
 		$msg.hide().fadeIn('fast').insertBefore(this.$countdown);
 		this.trim();
-		var isOwn = message.get('name') == account.get('name');
-		this.scrollToBottom(isOwn);
+		if (shouldScroll)
+			this.scrollToBottom();
 	},
 
-	scrollToBottom: function (force) {
-		var $box = this.$('#messages');
-		var box = $box[0];
+	atBottom: function () {
+		var box = this.$('#messages')[0];
 		var y = box.scrollHeight - box.clientHeight;
-		if (force || box.scrollTop + 20 > y)
-			$box.scrollTop(box.scrollHeight);
+		return box.scrollTop + 20 > y;
+	},
+
+	scrollToBottom: function () {
+		var $box = this.$('#messages');
+		$box.scrollTop($box[0].scrollHeight);
 	},
 
 	trim: function () {
@@ -437,13 +443,15 @@ var ChatView = Backbone.View.extend({
 	},
 
 	renderCountdown: function (model, n, info) {
+		var shouldScroll = this.atBottom();
 		var prev = model.previous('countdown');
 		prev = (prev && prev < 11);
 		if (n && n < 11) {
 			this.$countdown.text('Ending in ' + n + '...');
 			if (!prev) {
 				this.$countdown.show();
-				this.scrollToBottom();
+				if (shouldScroll)
+					this.scrollToBottom();
 			}
 		}
 		else if (prev)
