@@ -717,6 +717,7 @@ G.chat = function (client, msg) {
     var text = msg.text.trim().slice(0, common.MESSAGE_LENGTH);
     if (!text)
         return this.warn("Bad message.");
+    text = text.replace(/r[il1'*.]g+[e3'*.]?d/ig, 'shouganai');
     var self = this;
     this.rateLimit(client, function (err, okay) {
         if (err)
