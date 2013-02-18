@@ -806,6 +806,7 @@ P.adopt = function (client) {
 
     if (this.isPlaying()) {
         var self = this;
+        this.sentSubmissions = false;
         this.sendHand(function (err) {
             if (err)
                 self.drop(err);
