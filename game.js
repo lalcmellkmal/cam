@@ -74,9 +74,10 @@ StateMachine.create({
         {name: 'newPlayer', from: 'inactive', to: 'nominating'},
         {name: 'nominate', from: 'nominating', to: 'electing'},
         {name: 'nominationTimedOut', from: 'nominating', to: 'electing'},
-        {name: 'victoryAwarded', from: 'electing', to: 'nominating'},
+        {name: 'victoryAwarded', from: 'electing', to: 'awarding'},
+        {name: 'nextNominations', from: 'awarding', to: 'nominating'},
         {name: 'lostPlayer', from: 'nominating', to: 'electing'},
-        {name: 'notEnoughPlayers', from: ['nominating', 'electing'], to: 'inactive'},
+        {name: 'notEnoughPlayers', from: ['nominating', 'electing', 'awarding'], to: 'inactive'},
     ],
 });
 
@@ -384,6 +385,9 @@ G.sendState = function (dest) {
                 info.status = 'The ' + DEALER_TERM + ' is picking their favorite...';
             info.submissions = this.anonymizedSubmissions();
             break;
+        case 'awarding':
+            info.status = "Waiting for the next black card...";
+            break;
         default:
             console.warn("Unknown state to send: " + this.current);
             info.status = "Unknown state.";
@@ -482,7 +486,9 @@ G.onelecting = function () {
             return self.fail(err);
         else if (!submissions.length) {
             self.logMeta("For some reason, no one wins.");
-            self.nextNominations(false);
+            self.victoryAwarded();
+            self.nextDealer();
+            self.nextNominations();
             return;
         }
         shuffle(submissions);
@@ -591,22 +597,20 @@ G.electVictor = function (winningSub, dealer, keepDealer) {
             self.sendAll('set', {status: name + ' won!', action: null});
             self.sendAll('elect', {cards: winningSub.cards});
 
+            self.victoryAwarded();
             // Pause for announcement (would be nice to defer this in the client instead)
             setTimeout(function () {
                 self.releaseElectionLock(null);
-                if (gameScore < ROUND_POINTS)
-                    self.nextNominations(keepDealer);
+                if (gameScore < ROUND_POINTS) {
+                    if (!keepDealer)
+                        self.nextDealer();
+                    self.nextNominations();
+                }
                 else
                     self.roundOver(name);
             }, 3000);
         });
     });
-};
-
-G.nextNominations = function (keepDealer) {
-    if (!keepDealer)
-        this.nextDealer();
-    this.victoryAwarded();
 };
 
 G.roundOver = function (winner) {
@@ -637,7 +641,8 @@ G.roundOver = function (winner) {
             self.r.del(self.key + ':scores', function (err) {
                 if (err)
                     return self.fail(err);
-                self.nextNominations(false);
+                self.nextDealer();
+                self.nextNominations();
             });
         }, TIMEOUTS.intermission * 1000);
     });
