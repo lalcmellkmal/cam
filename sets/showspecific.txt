@@ -71,6 +71,7 @@ NERV.
 Kaworu.
 My AT field.
 Pen-pen.
+Playing his piano.
 Plugsuits.
 A Progressive Knife.
 Rei clones.
@@ -224,6 +225,11 @@ Seizon senryakuuu!
 Ash's Pikachu.
 Catching 'Em All.
 Gary Oak.
+# PSYCHO-PASS
+Psycho-Pass.
+My Crime Coefficient.
+Dominatah.
+'Cause I FEEEEL!
 # RAILDEX
 Accelerator.
 Fukou da.
@@ -279,6 +285,7 @@ Kiraboshi.
 CERN.
 Dr. Pepper.
 El. Psy. Congroo.
+Feyris nyan-nyan.
 Gel-bananas.
 Hououin Kyouma.
 Lab coats.
@@ -348,6 +355,7 @@ Chocolate coronets.
 Homonculi.
 Potemayo.
 The Dragonballs.
+CHA LA, HEAD CHA-LA!
 Korean zombies.
 Mongolian Chop Squad.
 Half-priced Bento.
@@ -382,7 +390,6 @@ My love, my anger, and all of my sorrow.
 Nipah!
 Shining Finger.
 Shonen Bat.
-Doing a perfect Immelmann Turn.
 Picking up trash... in space!
 Basketball... in space!
 Impractical ninja outfits.
@@ -423,8 +430,6 @@ Dokuro-chan.
 Freddie.
 Some sort of loli breakfast machine.
 Marshmallow hell.
-Psycho-Pass.
-'cause I FEEEEL.
 Evangeline.
 The Biscuit Hammer.
 Erio.
@@ -435,3 +440,4 @@ Yomi ;_;.
 The Medaka Box.
 The GJ-bu.
 Sasami-san.
+Akagi.
