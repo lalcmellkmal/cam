@@ -311,7 +311,7 @@ G.oninactive = function (event, from, to) {
         player.clearAfk();
     });
     var self = this;
-    this.r.hmset(this.key, {state: 'inactive', black: null}, function (err) {
+    this.r.hmset(this.key, {state: 'inactive', black: ''}, function (err) {
         if (err)
             return self.fail(err);
         self.set({black: null});
