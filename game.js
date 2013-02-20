@@ -764,6 +764,7 @@ G.sendMessageHistory = function (dest) {
 
 function Player(id) {
     Model.call(this);
+    this.setMaxListeners(0);
     this.id = id;
     this.score = 0;
 }

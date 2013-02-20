@@ -67,6 +67,7 @@ var CLIENT_CTR = 0;
 
 function Client(sock, ip) {
     events.EventEmitter.call(this);
+    this.setMaxListeners(0);
     this.sock = sock;
     this.ip = ip;
     this.clientId = 'C' + (++CLIENT_CTR);
