@@ -1047,7 +1047,7 @@ P.checkSubmission = function (count, cb) {
 };
 
 P.handOverSubmission = function (m, submission, discards) {
-    m.srem(this.key + ':hand', submission.cards);
+    m.srem.apply(m, [this.key + ':hand'].concat(submission.cards));
     m.sadd(discards, submission.cards);
 };
 
