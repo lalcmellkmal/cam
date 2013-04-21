@@ -154,7 +154,7 @@ var GameView = Backbone.View.extend({
 		var $black = this.$('.black:first');
 		if (black) {
 			var info = parseBlack(black);
-			$black.find('a').text(info.text).hide().fadeIn();
+			$black.find('a').html(escapeCard(info.text)).hide().fadeIn();
 			this.model.set({blackInfo: info});
 		}
 		else {

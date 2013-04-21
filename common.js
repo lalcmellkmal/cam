@@ -43,7 +43,7 @@ var ABBREV = 60;
 
 exports.applySubmission = function (black, sub, abbrev) {
     var bits = [];
-    var first = black.tokens[0];
+    var first = cleanUp(black.tokens[0]);
     if (!abbrev)
         bits.push(first + (black.skipQuestion ? ' ' : ''));
     else if (!black.skipQuestion)
@@ -72,11 +72,15 @@ exports.applySubmission = function (black, sub, abbrev) {
 
         var next = black.tokens[i*2 + 2];
         if (next)
-            bits.push((abbrev && next.length > ABBREV) ? ' [...] ' : next);
+            bits.push((abbrev && next.length > ABBREV) ? ' [...] ' : cleanUp(next));
     }
 
     return bits;
 };
+
+function cleanUp(text) {
+    return text.replace(/\[-\]/g, '');
+}
 
 exports.randomId = function () {
         return '' + (Math.floor(Math.random() * 1e16) + 1);
