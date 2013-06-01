@@ -120,7 +120,7 @@ How do you escape the Tatami Galaxy?
 _ in charge of _.
 Who's that Pokémon?
 How should _ have really ended? _.
-Don't say that you are _ / Datte hontou wa _.
+Please don't say you are _ / Datte hontou wa _.
 _. Keikaku doori.
 What did we spend 40% of the budget on?
 _ is the one true god.
@@ -226,3 +226,5 @@ TL Note: S and M are common abbreviations for _ and _.
 _ is a status symbol!
 Welcome to the Space _!
 Once your _'s delivered, have some fun with _!
+The results are in. This year's best couple is.... _ and _!
+The room is ripe with the stench of _.
