@@ -495,6 +495,8 @@ G.onelecting = function () {
 
         var m = self.r.multi();
         submissions.forEach(function (sub) {
+            if (!sub.player)
+                return;
             sub.player.handOverSubmission(m, sub, self.key + ':whiteDiscards');
             delete sub.player;
         });
