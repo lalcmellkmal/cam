@@ -34,6 +34,7 @@ function startServer() {
         log: sockJsLog,
     });
     http.listen(config.LISTEN_PORT);
+    console.log('Listening on port ' + config.LISTEN_PORT + '.');
 }
 
 function onConnection(conn) {
