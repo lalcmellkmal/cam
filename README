@@ -5,10 +5,8 @@ Deps:
 * node.js
 * redis
 
-NPM deps:
+Install dependencies with `npm install`. Edit config.js as needed.
 
-* async
-* connect
-* redis
-* sockjs
-* underscore
+Development: `node builder.js`
+
+Production: `node server.js`

@@ -1,0 +1,19 @@
+{
+	"name": "cam",
+	"version": "0.1.0",
+	"description": "Cards Against Megukas",
+	"keywords": ["qb"],
+	"homepage": "http://doushio.com/cards/",
+	"repository": "https://github.com/lalcmellkmal/cam.git",
+	"license": "MIT",
+	"scripts": {
+		"start": "node server.js"
+	},
+	"dependencies": {
+		"async": "0.2.9",
+		"connect": "2.9.0",
+		"redis": "0.8.4",
+		"sockjs": "0.3.7",
+		"underscore": "1.5.2"
+	}
+}
