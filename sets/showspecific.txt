@@ -339,6 +339,8 @@ Lab coats.
 Maddo Scientistu.
 John Titor.
 Tuturu.
+# SUISEI NO GARGANTIA
+Hideauze.
 # SZS
 Zetsubou.
 Bure.
@@ -509,3 +511,4 @@ Literature Girl.
 Dyson Spheres.
 Senmetsu.
 Ranka.
+Zvezda.
