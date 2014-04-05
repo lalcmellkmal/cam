@@ -346,7 +346,10 @@ Maddo Scientistu.
 John Titor.
 Tuturu.
 # SUISEI NO GARGANTIA
+Chamber.
 Hideauze.
+Ledo.
+Senmetsu.
 # SZS
 Zetsubou.
 Bure.
@@ -515,7 +518,6 @@ Escaflowne.
 Yuyushiki.
 Literature Girl.
 Dyson Spheres.
-Senmetsu.
 Ranka.
 Mushroom Samba.
 8man.
