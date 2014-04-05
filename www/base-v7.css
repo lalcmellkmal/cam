@@ -174,9 +174,11 @@ ul {
 	border-color: white;
 }
 #suggestions {
-	color: gray;
 	clear: both;
 	padding-top: 2em;
 	size: small;
 	text-align: right;
+}
+#suggestions a {
+	color: #bbb;
 }

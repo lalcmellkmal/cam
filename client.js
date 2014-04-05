@@ -622,19 +622,14 @@ function blinkTitle() {
 }
 
 function suggestionBox() {
-	var $label = $('<label for=suggestion>Suggest a card:</label>');
-	var $sug = $('<input id=suggestion maxlength=200>');
-	var $thanks = $('<span>Thanks!</span>').css({opacity: 0});
-	var $box = $('<form id=suggestions/>').append($label, ' ', $sug, '<br>', $thanks);
-	$box.on('submit', function (event) {
-		event.preventDefault();
-		var card = $sug.val().trim();
-		if (card) {
-			send('suggest', {card: card});
-			$thanks.stop().css({opacity: 1}).delay(500).animate({opacity: 0});
-		}
-		$sug.val('').focus();
+	var $link = $('<a>', {
+		href: 'https://github.com/lalcmellkmal/cam/tree/master/sets',
+		rel: 'nofollow',
+		target: '_blank',
+		text: 'Suggestions',
+		title: 'Send a pull request!',
 	});
+	var $box = $('<div id="suggestions"/>').append($link);
 	return $box;
 }
 
