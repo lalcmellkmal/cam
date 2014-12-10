@@ -538,6 +538,7 @@ The Earth element.
 The Darkness element.
 The Lightning element.
 The little sister element.
+Funabori.
 Dark And Dark.
 Closed Clock.
 Time Is Guilty.
