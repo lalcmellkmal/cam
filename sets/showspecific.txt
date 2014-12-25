@@ -11,6 +11,7 @@ Girls Dead Monster.
 Mapo tofu.
 # ARIA
 Neo-Venezia.
+Planet Aqua.
 # AZUMANGA
 Chiyo in a penguin suit.
 Chiyo-chan's dad.
@@ -111,6 +112,14 @@ Saber.
 Sakura eating a fish.
 Servants.
 Shirou.
+# GATCHAMAN
+Crowds.
+GALAX.
+Gatchaman.
+Hajime.
+Katze.
+MESS.
+Utsuutsu shimasu.
 # GOD ONLY KNOWS
 Haqua.
 Shiny red firetruck!
@@ -176,6 +185,7 @@ The decline of humanity.
 Watashi.
 # JOJO
 Duwang.
+JoJo's Bizarre Adventure.
 # K-ON!
 Azu-nyan.
 Tea and cakey.
@@ -268,6 +278,8 @@ Fabulous Max!
 IMAGIIIIIINE!
 The Penguindrum.
 Seizon senryakuuu!
+# PING PONG
+HERO KENZAN!
 # POKEMON
 Ash's Pikachu.
 Catching 'Em All.
@@ -566,3 +578,6 @@ SunRed.
 One-Punch Man.
 Dorothy.
 Roger Smith.
+Usaka.
+TADA BANRI.
+Juicy Yuuji.
