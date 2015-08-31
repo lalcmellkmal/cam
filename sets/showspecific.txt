@@ -29,10 +29,21 @@ Co-operative toothbrushing.
 Crab.
 Hachikuji.
 Kakaka.
+Kaiki Deishuu.
 Kiss-Shot Acerola-Orion Heart-Under-Blade.
 Platinum mad.
 The Platinum Disco.
 Suruga monkey.
+# BLAME!
+An 800-hour elevator ride
+Traversing a room the size of Jupiter
+Touha Heavy Industries
+# CHAIKA
+Yes, Chaika!
+Black Chaika.
+Blue Chaia.
+Red Chaika.
+Shocking truth!
 # CHIHAYAFURU
 Arata.
 Camera-wielding fanboys.
@@ -41,6 +52,7 @@ Our Queen.
 Retro-kun.
 Taichi Mashima.
 # CHUUNIBYOU
+Black Raison d'Être.
 Chuunibyou.
 Wearing just one colored contact.
 Dark Flame Master.
@@ -61,6 +73,12 @@ Spinzaku.
 # CROMARTIE
 Freddie.
 Mechazawa.
+# D-Frag!
+The Darkness element.
+The Lightning element.
+The little sister element.
+Funabori.
+Rokka.
 # DARKER THAN BLACK
 Chinese Electric Batman.
 The Gate.
@@ -104,6 +122,10 @@ Being already dead.
 Swinging the bat.
 Those eyebrows.
 Yellow vespas.
+# FULL METAL ALCHEMIST
+Alchemy.
+Full Metal Alchemist.
+Equivalent Exchange.
 # FSN
 E-rank luck.
 J-J-Jamming it in.
@@ -134,7 +156,7 @@ Nonoriri.
 The Polydimensional Space-Time Censor Room.
 Radiation sickness.
 Super Inazuma Kick.
-Time dialation.
+Time dilation.
 # GUILTY CROWN
 Cancer crystals.
 Shoe.
@@ -162,11 +184,18 @@ Nagato Yuki.
 The Melancholy.
 Talking Shamisen.
 The SOS-dan.
+# HIBIKE! EUPHONIUM
+Chromatic abberation.
+Geh.
+Tubacabra.
+Dvořák’s 9th symphony.
 # HIDAMARI
 Yet another season of Hidamari Sketch.
 The Hidamari Apartments.
 That episode of Hidamari Sketch where Yuno has a fever.
 Ume-sensei.
+Nori.
+Miya-chan.
 Wideface.
 # HYOUKA
 Chitanda.
@@ -180,25 +209,37 @@ Squidvasions.
 Closed Clock.
 Dark and Dark.
 Time is Guilty!
+Wakaranai, Wakaranai, Wakaranai, Wakaranai!
 # JINRUI WA SHIMASHITA
 The decline of humanity.
+Time paradogs.
 Watashi.
 # JOJO
 Dio.
+DIO.
 Duwang.
 It just works.
 JoJo's Bizarre Adventure.
 JoJo's Poses.
+JoJo.
 Speedwagon.
+Stand.
+The World.
 # K-ON!
 Azu-nyan.
 Tea and cakey.
 Gitah.
+Houkago tea time.
 # KAIJI
+ANDOUUU!
 Gamburu.
 Kaiji-kun.
 Kuyashii!
 Zawa zawa.
+# KANTAI COLLECTION
+Girls who are also boats.
+Whobuki.
+~poi!
 # KILL LA KILL
 D-T-R.
 Gamagoori.
@@ -218,6 +259,8 @@ Senketsu.
 # KILL ME BABY
 Kill Me Baby.
 Nice desu ne.
+# KOUFUKU GRAFFITI
+Erotic eating scenes.
 # MADOKA
 Adorable teenage liches.
 Charlotte.
@@ -228,6 +271,7 @@ Endless recursion of time.
 Godoka.
 Grief seeds.
 Headless Mami.
+Homucifer.
 A Homu homu.
 Kyubey eating a dead Kyubey.
 The Madonka-donks.
@@ -239,6 +283,7 @@ Morning Rescue!
 Negentropy.
 Peeping Homu.
 Poorfag-chan.
+Rebellion.
 Sealdoka.
 Sayaka.
 Suffering.
@@ -257,6 +302,9 @@ I Am Boss.
 Japanese Milhouse.
 Minami-ke.
 Ninomiya-kun!
+# My TEENAGE ROMCOM SNAFU
+Logical thinking.
+Sore aru!
 # NICHIJOU
 A deer.
 EEEEHHHH?!
@@ -269,6 +317,15 @@ Selamat pagi!
 Super ultra great delicious wonderful yabai.
 The Nichijou poker face.
 Things we think are cool!
+# NON NON BIYORI
+Armageddon.
+Candy Store.
+Renge-chon.
+Nyanpassu!
+# OYASUMI PUNPUN
+Onodera Punpun.
+Good vibrations.
+Tinkle tinkle hoy.
 # P&Sw/G
 Fly Away Now.
 Garterbelt.
@@ -290,6 +347,7 @@ Catching 'Em All.
 Gary Oak.
 The Helix fossil.
 Professor Oak.
+Team Rocket.
 # PSYCHO-PASS
 Psycho-Pass.
 Hyper Oats.
@@ -402,15 +460,23 @@ Giga Drill Breaker.
 Kamina.
 Rossiu.
 Spirals.
+# UCHOUTEN KAZUKU MY NEIGHBOURS THE TANUKIS
+Kaisei.
+Tanuki.
+Tengu.
 # UMINEKO
 Beatrice.
 Not believing in magic.
 Oh Desire!
 Seacats.
+# WAKAKO ZAKE
+Pshuu-shuu!
 # WORKING!
 Androphobia.
 The Poplar army.
 Strawberry parfaits.
+Popura-chan.
+Yamada.
 # YUGIOH
 Arms of the Forbidden One.
 Card games on motorcycles.
@@ -423,6 +489,13 @@ Torso of the Forbidden One.
 # YURU YURI
 Akari~n.
 Toshino Kyouko.
+# YUYUSHIKI
+Deluge.
+Rosebud.
+Winter hazel.
+Yuyuesday.
+Yui-chan's little bean.
+Yuyushiki.
 
 # MISC
 Autism sparkles.
@@ -441,6 +514,7 @@ Boushi.
 Deculture!
 Grave of the Fireflies.
 KANEDAAAAA!
+TETSUOOO!
 Chocolate coronets.
 Homonculi.
 Potemayo.
@@ -511,7 +585,6 @@ Strike Witches.
 The Fractale System.
 Cockroach-tan.
 The date rape water gun.
-JoJo.
 Yuno Gasai.
 Panzerfahren.
 Yukari's fluffy hair.
@@ -538,15 +611,12 @@ Yuusha.
 The Nasuverse.
 Rukia.
 Red Data Girl.
-The World.
 E-rank luck.
 Masa-san.
-DIO.
 Swimbros.
 ERU ERUFU.
 Krauser-san.
 Escaflowne.
-Yuyushiki.
 Literature Girl.
 Dyson Spheres.
 Ranka.
@@ -564,17 +634,9 @@ The dog from Pupa.
 Ene.
 Kisaragi Momo.
 Asada-san.
-The Darkness element.
-The Lightning element.
-The little sister element.
-Funabori.
 Guillotine Gorilla.
-Nori.
-Miya-chan.
 Onii-sama "Jesus" Tatsuya.
 JOHJ.
-Girls who are also boats.
-Stand.
 RNG-sama.
 Gokukoku's wubstep.
 Witchy activity.
@@ -593,36 +655,24 @@ A training arc.
 A tournament arc.
 Initial D.
 Card Captor Sakura.
-Yes, Chaika!
-Black Chaika.
-Red Chaika.
-Shocking truth!
 Reinhard.
 Slaine.
 Cheerio!
 Naruto.
 Plastic Nee-san.
-Renge-chon.
-Nyanpassu!
-Wakaranai, Wakaranai, Wakaranai, Wakaranai!
-Houkago tea time.
 Ganbare!
 Swagamoto.
 Battoru.
 Shabadadu.
 GURIFFISSUUU.
-Onodera Punpun.
-Good vibrations.
-Tinkle tinkle hoy.
 Worms.
 A really nice bread.
 Don-don-donuts!
-Dvořák’s 9th symphony.
 Raison d'être.
-Black Raison d'Être.
-Homuficer.
-Kaiki Deishuu.
-Time paradogs.
 Titanium ribs.
-~poi!
-
+Aztec Batman.
+Himouto.
+Meat.
+Whobuki.
+The going home club.
+KUMA SHOCK!
