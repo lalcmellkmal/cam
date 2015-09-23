@@ -1,6 +1,7 @@
 var _ = require('underscore'),
     async = require('async'),
     common = require('./common'),
+    config = require('./config'),
     fs = require('fs'),
     Model = require('./model').Model,
     StateMachine = require('./state-machine').StateMachine,
@@ -957,9 +958,7 @@ P.incrementTotalScore = function (m) {
 };
 
 P.handle_join = function (msg) {
-    if (!/^\d+$/.test(msg.game))
-        return false;
-    var gameId = parseInt(msg.game, 10);
+    var gameId = config.GAME_ID;
     var self = this;
     Game.load(gameId, function (err, game) {
         if (err)
