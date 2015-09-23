@@ -6,7 +6,7 @@ var r = require('redis').createClient(config.REDIS_PORT);
 var origRef = process.argv[2] || 'HEAD';
 var dest = 'cam:game:' + (process.argv[3] || '1');
 
-require('child_process').exec('git show '+origRef, function (err, stdout, stderr) {
+require('child_process').exec('git diff '+origRef+' -- sets', function (err, stdout, stderr) {
 
     console.log(stdout);
     var lines = stdout.split(/\n/);
