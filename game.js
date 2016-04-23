@@ -127,7 +127,7 @@ G.addPlayer = function (player) {
         player.set({score: 0});
 
         player.dealHand(true);
-        self.players.push(player);
+        self.players.unshift(player);
         self.setChanged('players');
 
         if (!self.dealer)
