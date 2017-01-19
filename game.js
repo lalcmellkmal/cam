@@ -107,7 +107,8 @@ G.addPlayer = function (player) {
         this.warn('Already playing.');
         return false;
     }
-    if (player.ip != '127.0.0.1' && this.players.some(function (p) { return p.ip == player.ip; })) {
+    if (['127.0.0.1', '::1'].indexOf(player.ip) < 0 &&
+                this.players.some(function (p) { return p.ip == player.ip; })) {
         this.warn('Already playing.');
         return false;
     }
