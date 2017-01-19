@@ -10,10 +10,12 @@
 		"start": "node server.js"
 	},
 	"dependencies": {
-		"async": "0.2.9",
-		"connect": "2.9.0",
-		"redis": "0.8.4",
-		"sockjs": "0.3.7",
-		"underscore": "1.5.2"
+		"async": "2.1.4",
+		"connect": "3.5.0",
+		"escape-html": "1.0.3",
+		"redis": "2.6.5",
+		"serve-static": "1.11.1",
+		"sockjs": "0.3.18",
+		"underscore": "1.8.3"
 	}
 }

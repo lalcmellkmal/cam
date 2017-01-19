@@ -5,6 +5,6 @@ module.exports = {
 	TRUST_X_FORWARDED_FOR: false,
 	SOCKJS_PREFIX: '/sockjs',
 	SOCKJS_URL: 'http://localhost:8000/sockjs',
-	SOCKJS_SCRIPT_URL: 'http://localhost:8000/sockjs-0.3.2.min.js',
+	SOCKJS_SCRIPT_URL: 'http://localhost:8000/sockjs-1.1.1.min.js',
 	GAME_ID: 1,
 };

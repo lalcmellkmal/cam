@@ -1,8 +1,8 @@
 var assets = require('./assets'),
     common = require('./common'),
     config = require('./config'),
-    connect = require('connect'),
     game = require('./game'),
+    escape = require('escape-html'),
     events = require('events'),
     urlParse = require('url').parse,
     util = require('util');
@@ -15,10 +15,10 @@ var SHARED_REDIS = redisClient();
 game.setRedis(SHARED_REDIS);
 
 function startServer() {                                                       
-    var app = connect.createServer();
+    var app = require('connect')();
     app.use(serveScripts);
     app.use(serveSuggestions);
-    app.use(connect.static(__dirname + '/www', {maxAge: 2592000000}));
+    app.use(require('serve-static')(__dirname + '/www', {maxAge: 2592000000}));
     app.on('upgrade', function (req, resp) {
         resp.end();
     });
@@ -295,7 +295,7 @@ function serveSuggestions(req, resp, next) {
             if (err)
                 return console.error(err);
             for (var i = 0; i < suggestions.length; i ++) {
-                var card = connect.utils.escape(suggestions[i]);
+                var card = escape(suggestions[i]);
                 resp.write(card + '<br>\n');
             }
             resp.end();
