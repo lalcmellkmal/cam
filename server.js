@@ -145,10 +145,10 @@ C.flush = function () {
 C.handle_login = function (msg) {
     if (this.state != 'new' || !(typeof msg.id == 'string'))
         return this.warn("Can't login.");
-    var fakeId = msg.id;
-    if (!/^\d{1,20}$/.test(fakeId))
+    var cookieId = msg.id;
+    if (!/^\d{1,20}$/.test(cookieId))
         return this.warn("Bad id.");
-    var fakeKey = 'cam:id:' + fakeId;
+    var fakeKey = 'cam:id:' + cookieId;
     var self = this;
     // Get them a user ID first
     var m = this.r.multi();
@@ -159,7 +159,7 @@ C.handle_login = function (msg) {
             return self.drop(err);
         var realId = results[0];
         if (realId) {
-            self.loadUser(realId);
+            self.loadUser(realId, cookieId);
             return;
         }
         self.r.incr('cam:userCtr', function (err, realId) {
@@ -168,13 +168,13 @@ C.handle_login = function (msg) {
             self.r.setex(fakeKey, config.NAME_EXPIRY, realId, function (err) {
                 if (err)
                     return self.drop(err);
-                self.loadUser(realId);
+                self.loadUser(realId, cookieId);
             });
         });
     });
 };
 
-C.loadUser = function (id) {
+C.loadUser = function (id, cookieId) {
     if (this.state != 'new')
         return this.warn("User already loaded!");
 
@@ -183,13 +183,15 @@ C.loadUser = function (id) {
     var self = this;
     var m = this.r.multi();
     m.hget(this.key, 'name');
+    m.hset(this.key, 'c', cookieId);
     m.expire(this.key, config.NAME_EXPIRY); // reset TTL
     m.exec(function (err, results) {
         if (err)
             return self.drop(err);
         var name = results[0];
         if (name) {
-            self.r.expire('cam:name:' + name.toLowerCase(), config.NAME_EXPIRY, function () {});
+            var nameKey = 'cam:name:' + name.toLowerCase();
+            self.r.expire(nameKey, config.NAME_EXPIRY, function () {});
         }
         self.name = name || null;
         self.send('set', {t: 'account', name: name});
