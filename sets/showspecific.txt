@@ -115,6 +115,10 @@ DOLLARS.
 # EDEN OF THE EAST
 Cinematic timing.
 Juiz.
+Mr. Outside.
+A Japanese person and an American having a bilingual conversation.
+Living inside a mall.
+The Careless Monday Attacks.
 # EVA
 Comatose girls.
 Omedetou.
@@ -154,10 +158,32 @@ Your pervy robot sidekick.
 A robot disguised as your grandma.
 # FLYING WITCH
 Makoto's farts.
+# FOOD WARS
+Mikumi.
+Nakiri Erina-sama.
+The God Tongue.
+A Shokugeki.
 # FULL METAL ALCHEMIST
 Alchemy.
 Full Metal Alchemist.
 Equivalent Exchange.
+# FUTURE DIARY
+My Future Diary.
+DEAD END.
+HAPPY END.
+Yuno Gasai.
+Yuno Meme Face.
+14-Year-Olds having sex for the "first" time.
+May your beginnings bode propitiously.
+Deus.
+MurMur.
+Waiting 10,000 years to be reunited with your stalker.
+That's not how the manga ended!
+Zurerufuzu.
+Sakurami City.
+Swirling out of existence.
+They're all dead! How are there still four episodes left?
+Tasting each other's saliva through a straw.
 # FSN
 E-rank luck.
 J-J-Jamming it in.
@@ -220,6 +246,7 @@ Club application forms.
 Compulsive book reading disorder.
 Costume rape.
 Cute bookworms.
+The Data Integration Thought Entity.
 Denwa.
 Endless Eight.
 The Hare Hare Yukai dance.
@@ -244,6 +271,17 @@ Ume-sensei.
 Nori.
 Miya-chan.
 Wideface.
+# HIGURASHI
+Being "spirited away" by a demon.
+Oyashiro-sama.
+Oyashiro-sama's curse.
+Nano desu.
+Two-timing the Sonozaki sisters.
+The Dam War.
+Stuck repeating June of 1983.
+Dying by clawing your throat out.
+Hinamizawa Syndrome.
+Watanagashi.
 # HOUSUKI NO KUNI
 Gembutts.
 Phosphophyllite.
@@ -259,6 +297,10 @@ A rose-colored school life.
 Endless torrents of squid ink.
 Mini-Ika.
 Squidvasions.
+# IN ANOTHER WORLD WITH MY SMARTPHONE
+In Another World with my Smartphone.
+Gozaru!
+A world where polygamy is "quite normal".
 # INOU BATTLE
 Closed Clock.
 Dark and Dark.
@@ -291,6 +333,13 @@ Houkago tea time.
 # KABANERI OF THE IRON FORTRESS
 English-kun.
 The muscle chick from Kabaneri.
+# KAEMPFER
+Kaempfer.
+Entrails Animals.
+When the fanservice suddenly has plot.
+The MC dating their female self.
+Anime songs these days sound normal.
+When the doitsu level is almost unbearable.
 # KAIJI
 ANDOUUU!
 Gamburu.
@@ -478,6 +527,11 @@ Professor Oak.
 Team Rocket.
 # POP TEAM EPIC
 Pop Team Epic.
+Hellshake Yano.
+Eisai! Haramasukoi!
+The male VAs were better.
+King Records.
+Bob Team Epic.
 # PRISMA ILLYA
 Prisma Illya.
 Kuro.
@@ -496,16 +550,23 @@ The Sibyl System.
 'Cause I FEEEEL!
 Spooky Boogie.
 # RAILDEX
+103,000 Grimoires.
 Accelerator.
+Anti-Skill.
 Controlling people with a remote.
 Fukou da.
 Gekkota.
 Imagine Breaker.
 Judgemento.
+Kicking vending machines.
 Kuroko.
 Level Upper.
+Multi-Active Rescue.
 Railguns.
+Regrettably.
 Saten.
+Skill Out.
+Tokiwadai's Ace.
 Touma punching girls.
 Vectors.
 # REDLINE
@@ -520,6 +581,7 @@ Meteora.
 Half an episode worth of exposition.
 Uso no uso.
 # RE:ZERO
+Return by Death.
 Subaru-kun.
 Rem.
 Ram.
@@ -532,6 +594,7 @@ MARU!
 The Sweats Club.
 Wan.
 # ROBOTICS;NOTES
+Duhuhu.
 Berserk robotic legs.
 Frau Kojiro.
 Gunvarrel Ankh Striker.
@@ -584,6 +647,18 @@ Comfy catastrophe.
 # SOUL EATER
 Excalibur.
 My legend.
+# SPACE DANDY
+Dandy. Space Dandy.
+He's a dandy guy... in space.
+Accidentally winning a misunderstandings competition.
+High School Caste System.
+Eating at Boobies.
+A Cosmic String.
+Searching for the ultimate ramen.
+Maybe Continued?
+Blowing up the universe in episode one.
+Viva Namida.
+Shalalula.
 # S&W
 Economics.
 Korbo.
@@ -594,16 +669,25 @@ Cybodies.
 The Galactic Pretty Boy.
 Kiraboshi.
 # STEINS;GATE
+@Channel.
 CERN.
 Dr. Pepper.
 El. Psy. Congroo.
 Feyris nyan-nyan.
 Gel-bananas.
+Hacking to the Gate.
 Hououin Kyouma.
+Human is Dead. Mismatch.
+It's a mashup of English AND German.
 Lab coats.
-Maddo Scientistu.
+Maddo Scientisto.
+Phone Microwave.
+Sunuvabitch!
 John Titor.
+Taimu Mashin.
+The Zombie.
 Tuturu.
+Unnecessary semicolons in the title.
 # SUISEI NO GARGANTIA
 Chamber.
 Hideauze.
@@ -764,7 +848,6 @@ Strike Witches.
 The Fractale System.
 Cockroach-tan.
 The date rape water gun.
-Yuno Gasai.
 Panzerfahren.
 Yukari's fluffy hair.
 The Angler Fish Dance.
@@ -830,6 +913,7 @@ Japanese Gordon Ramsay.
 Punching sense into your friend.
 Running away.
 Unzipping your pants by sheer willpower.
+A filler arc.
 A training arc.
 A tournament arc.
 Initial D.
