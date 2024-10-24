@@ -10,7 +10,7 @@
 		"start": "node server.js"
 	},
 	"dependencies": {
-		"async": "2.1.4",
+		"async": "2.6.4",
 		"connect": "3.5.0",
 		"escape-html": "1.0.3",
 		"redis": "2.6.5",
