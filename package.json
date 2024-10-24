@@ -16,6 +16,6 @@
 		"redis": "2.6.5",
 		"serve-static": "1.16.0",
 		"sockjs": "0.3.20",
-		"underscore": "1.8.3"
+		"underscore": "1.12.1"
 	}
 }
